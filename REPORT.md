@@ -1,3 +1,6 @@
+<!-- This file has {{...}} placeholders. The filled version with real numbers is
+     REPORT_GENERATED.md (run `make report` to regenerate it). -->
+
 # TrustAgent
 
 I built a small support agent for `@SpotifyCares` and spent most of the time
