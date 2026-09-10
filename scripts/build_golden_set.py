@@ -42,7 +42,7 @@ def _len_bucket(s: str) -> str:
     return "short" if n < 80 else ("medium" if n < 180 else "long")
 
 
-POOL_N = 320  # pre-label this many test rows, then stratify down to TARGET_N
+POOL_N = int(os.environ.get("POOL_N", "320"))  # pre-label this many, then stratify to TARGET_N
 
 
 def make_sample(cfg):
