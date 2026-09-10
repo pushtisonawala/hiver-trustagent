@@ -40,6 +40,25 @@ def few_shot_block() -> str:
     return "\n".join(f"- {k}: {v}" for k, v in DEFINITIONS.items())
 
 
+# compact one-liners for the per-call classify prompt (the full DEFINITIONS blow
+# the free-tier 6-8k tokens/min cap when sent on every request)
+SHORT_DEFS = {
+    "playback_or_app_bug": "won't play / skips / crashes / offline downloads broken",
+    "account_access": "login, password reset, hacked, 'not premium anymore'",
+    "billing_subscription": "charge/price/payment-method/student-discount/promo issues",
+    "cancel_or_refund": "wants to cancel or get money back",
+    "family_or_duo_plan": "family/duo plan admin, address, members",
+    "content_availability": "song/album/podcast missing, region-locked, wrong metadata",
+    "device_or_connect": "Connect, car, Alexa, speakers, consoles, casting",
+    "feature_request_or_feedback": "feature asks, UX complaints, praise/venting",
+    "other": "spam, jokes, unclear, non-Spotify, nothing actionable",
+}
+
+
+def short_block() -> str:
+    return "\n".join(f"- {k}: {v}" for k, v in SHORT_DEFS.items())
+
+
 # --------------------------------------------------------------------------- #
 # Classifiers                                                                  #
 # --------------------------------------------------------------------------- #
@@ -107,12 +126,11 @@ class LLMClassifier:
 
     def _one(self, text: str) -> dict:
         sys = (
-            "You are an intent classifier for Spotify customer-support tweets. "
-            "Choose exactly one label from this set:\n" + few_shot_block() +
-            "\nReturn JSON: {\"intent\": <label>, \"confidence\": <0..1>}."
+            "Classify this Spotify support tweet. Pick exactly one:\n" + short_block() +
+            "\nReturn JSON {\"intent\": <label>, \"confidence\": 0..1}."
         )
         try:
-            raw = llm.complete(self.provider, self.model, sys, text, max_tokens=250,
+            raw = llm.complete(self.provider, self.model, sys, text[:400], max_tokens=200,
                                json_mode=True, reasoning="none")
             d = llm.parse_json(raw)
             intent = d.get("intent", "other")

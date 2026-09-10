@@ -38,14 +38,14 @@ intents:
 #   judge_b: {provider: gemini, model: gemini-3.6-flash}
 models:
   # All on Groq's free tier. Judge A is deliberately the SAME model as the
-  # drafter (self-preference probe); Judge B is a different lineage (allam-2-7b).
-  # Groq free tier: qwen/allam are ~1000 req/MIN; the openai/gpt-oss-* models are
-  # only 1000 req/DAY — avoid them for anything but a one-off. `llm.py` trims
-  # prompts and sets reasoning_effort=none to stay under the 8k tokens/min cap.
-  agent:        {provider: groq, model: qwen/qwen3.8-27b}   # classify + draft
-  weak_labeler: {provider: groq, model: qwen/qwen3.8-27b}   # bulk
-  judge_a:      {provider: groq, model: qwen/qwen3.8-27b}   # SAME model as drafter
-  judge_b:      {provider: groq, model: allam-2-7b}         # different lineage (cross-check)
+  # drafter (self-preference probe); Judge B is a different model lineage.
+  # Groq free tier is ~1000 req/DAY per model (8k tokens/min); allam-2-7b is
+  # 7000/day, so it does the bulk work. `llm.py` trims prompts and sets
+  # reasoning_effort=none to stay under the token cap.
+  agent:        {provider: groq, model: allam-2-7b}         # classify + draft
+  weak_labeler: {provider: groq, model: allam-2-7b}         # bulk
+  judge_a:      {provider: groq, model: allam-2-7b}         # SAME model as drafter
+  judge_b:      {provider: groq, model: openai/gpt-oss-120b} # different lineage (cross-check)
   embeddings:   {provider: tfidf}                             # local, free, deterministic
 
 retrieval:
@@ -76,7 +76,7 @@ policy:
 judge:
   quality_accept_threshold: 4   # rubric overall >= 4 (of 5) counts as "acceptable"
   human_agreement_n: 60         # replies double-rated by a human for judge validation
-  max_rows: 40                  # judged rows per system (bump if your daily Groq quota allows)
+  max_rows: 30                  # judged rows per system (bump if your daily Groq quota allows)
 
 eval:
   bootstrap_iterations: 2000
