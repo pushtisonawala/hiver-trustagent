@@ -51,6 +51,9 @@ report: ## Fill REPORT.md placeholders from results/metrics.json -> REPORT_GENER
 demo: ## Interactive: type a customer message, see intent + evidence + draft + decision
 	$(PY) -m trustagent.cli demo
 
+demo-run: ## Run 5 example messages through the agent -> docs/demo_transcript.md
+	$(PY) scripts/demo_examples.py
+
 all: restore-cache build eval failures report ## Reproduce the headline results (target: <15 min)
 
 test: ## Unit tests
@@ -62,4 +65,4 @@ bundle-cache: ## Repack .cache/llm into llm-cache.tgz (do this before committing
 clean:
 	rm -rf artifacts/* results/*.json results/*.png results/*.md .cache
 
-.PHONY: help setup restore-cache bundle-cache data scan-brands smoke build golden provisional-golden eval judge-validation failures report demo all test clean
+.PHONY: help setup restore-cache bundle-cache data scan-brands smoke build golden provisional-golden eval judge-validation failures report demo demo-run all test clean

@@ -1,108 +1,104 @@
 # Decision log
 
-Non-obvious choices, why I made them, and what I traded away. Numbered for
-reference from REPORT.md.
+The non-obvious calls I made and why. Referenced by number from REPORT.md.
 
-1. **Brand = @SpotifyCares.** `make scan-brands` ranks brands by
-   replies-to-customers. AmazonHelp / AppleSupport are bigger but resolve almost
-   everything in DM, so the public transcript rarely contains the resolution —
-   which guts the "draft a reply grounded in past resolutions" task. Airlines
-   (Delta, etc.) are the same ("please DM your record locator"). Spotify has the
-   best ratio of *in-thread, self-contained* resolutions (settings toggles,
-   reinstall steps, licensing explanations) while still having a hard core of
-   account/billing cases to make the escalation decision non-trivial.
+1. **Brand: @SpotifyCares.** `make scan-brands` ranks brands by how many replies
+   they sent to customers. AmazonHelp and AppleSupport are bigger but resolve
+   almost everything in DM, so the public thread rarely contains the actual fix,
+   which kills the "draft a reply grounded in past resolutions" part of the task.
+   Airlines are the same ("DM us your record locator"). Spotify has the best mix:
+   lots of self-contained public fixes (settings toggles, reinstall steps,
+   licensing explanations) plus a hard core of account/billing cases that make
+   the escalate/auto decision actually matter.
 
-2. **Unit of work = one inbound customer message → (intent, draft, decision).**
-   Not multi-turn. The public threads mostly stop at "DM us", so a multi-turn
-   agent can't be evaluated honestly on this data. Trade: the agent never gets
-   penalised for multi-turn derailment (noted as a headline caveat).
+2. **One inbound message in, one (intent, draft, decision) out. No multi-turn.**
+   The public threads mostly stop at "DM us", so I can't score a conversation
+   fairly on this data. The cost is that the agent never gets marked down for
+   derailing across turns, which turned out to be its top failure mode anyway.
 
-3. **Temporal split (oldest 80% train / newest 20% test), not random.** The
-   retrieval index, the weak labels, and the golden set must not see the future.
-   A random split lets near-duplicate tweets (same bug wave, same week) land on
-   both sides and inflates retrieval + intent metrics. Cost: the test set is a
-   single later time-slice, so I can measure leakage-freeness but not drift.
+3. **Split train/test by time, not randomly.** 80% oldest for training and the
+   retrieval index, newest 20% for the golden set. A random split lets
+   near-duplicate tweets from the same bug wave land on both sides and inflates
+   everything. Downside: the test set is one later slice of time, so I can show
+   there's no leakage but I can't show robustness to drift.
 
-4. **Taxonomy: bootstrap then curate.** Embedded ~2k training messages, KMeans
-   k=12, read top TF-IDF terms + nearest examples per cluster
-   (`artifacts/taxonomy_bootstrap.json`), then hand-merged to 9 labels + `other`.
-   Pure data-driven clusters were unstable and split "playback" three ways while
-   collapsing all money issues into one; pure top-down risked missing real
-   categories. The 9 labels are a judgement call and a known bias source (REPORT §5.4).
+4. **Taxonomy: cluster first, then curate by hand.** Embedded ~2k training
+   messages, ran KMeans (k=12), read the top terms and nearest examples per
+   cluster, then merged down to 9 labels plus `other`. The raw clusters were
+   unstable: they split playback three ways and lumped all money problems
+   together. So the final 9 are a judgement call, and that's a bias source
+   (REPORT §5).
 
-5. **`other` is a real label with medium risk.** Unclear messages should not be
-   force-fit into a support intent and then confidently auto-answered.
+5. **`other` is a real label, not a dumping ground.** If a message is genuinely
+   unclear it should be flagged as such, not forced into a support intent and
+   then confidently auto-answered. (In practice the LLM over-used it, hence the
+   second labelling pass, see #8 below and SAMPLING_NOTE.)
 
-6. **Retrieval = local TF-IDF + cosine, no embedding API.** Support tweets are
-   short and lexical ("won't play", "charged twice", "can't log in"); TF-IDF
-   bigrams retrieve near-duplicates well and cost nothing. It also keeps the
-   whole pipeline free and offline-capable. Trade: misses paraphrase matches a
-   dense embedder would catch — listed as a week-2 upgrade and a failure mode
-   (`retrieval_irrelevant`). The code still supports OpenAI embeddings via
-   `config.yaml` if you have a key.
+6. **Retrieval is local TF-IDF, no embedding API.** Support tweets are short and
+   lexical ("won't play", "charged twice", "can't log in"), and TF-IDF bigrams
+   find the near-duplicates well enough. It also keeps the whole thing free and
+   runnable offline. It does miss paraphrases a dense embedder would catch, which
+   shows up as the `retrieval_irrelevant` failure mode. The code still takes
+   OpenAI embeddings via `config.yaml` if a key is present.
 
-7. **`simple` baseline is distilled, not rule-based.** The LLM weak-labels ~220
-   training messages, a TF-IDF+LogReg learns from those. This is a *strong*
-   simple baseline on purpose — if the full agent can't beat a distilled linear
-   model + verbatim retrieval, that's the finding. (Count kept low so a live
-   re-run fits the free-tier rate limit; bump `pipeline.build`'s `n` for a
-   stronger baseline if you have headroom.)
+7. **The "simple" baseline is distilled, not hand-written rules.** The LLM weak-
+   labels ~220 training messages and a TF-IDF + logistic-regression model learns
+   from those. I wanted a strong simple baseline: if the full agent can't beat a
+   linear model plus verbatim retrieval, that's worth knowing. (Kept the count
+   low so a live re-run fits the free-tier limits.)
 
-8. **"Resolved" = weak heuristic over the customer's follow-up** (gratitude /
-   no-reply = good; "still not working" = bad; pure "DM us" = unknown). There is
-   no label for this. It is optimistic (silent churn looks like success) and is
-   flagged as such. Alternative (hand-label 300 threads) is week-2 work.
+8. **"Resolved" is a regex heuristic over the customer's follow-up.** Thanks or
+   silence counts as resolved, "still not working" counts as not, a bare "DM us"
+   counts as unknown. There's no real label for this and the heuristic is
+   optimistic: someone giving up looks the same as someone helped. Flagged in the
+   report. Training a proper classifier on ~300 hand labels is week-2 work.
 
-9. **Escalation gate is a readable rule stack, not a learned model.** A reviewer
-   (and a support lead) can read exactly why any message escalated. Rules:
-   hard keywords → low intent confidence → weak precedent → high-risk intent w/o
-   strong precedent → ungrounded draft → needs account info → churn sentiment.
-   A learned gate on 200 labels would be higher-variance and unauditable.
+9. **The escalation gate is a rule stack, not a model.** Anyone can read exactly
+   why a message escalated. The rules, in order: hard keywords, low classifier
+   confidence, no precedent, high-risk intent without strong precedent, a draft
+   the model couldn't ground, a draft that needs account data, churn language. A
+   learned gate on ~150 labels would be higher variance and impossible to audit.
 
-10. **Asymmetric cost: false auto-handle = 5 × needless escalation.** Shipping a
-    wrong confident public reply (privacy leak, false refund promise, bad advice)
-    is much worse than asking a human to glance at a ticket. The 5× is a
-    deliberate guess, called out in REPORT §5.9; thresholds are tuned to it.
+10. **Cost matrix: a bad auto-reply is 5x worse than a needless escalation.** A
+    wrong confident public reply can leak info or promise a refund that isn't
+    coming; a needless escalation just wastes a human glance. The 5x is a guess
+    and I call it out as one. Thresholds are set against it, not against F1.
 
-11. **Headline metric = safe-automation rate, reported with unsafe-auto rate.**
-    Not "automation %". A system that auto-handles everything scores 100% on the
-    naïve metric and is useless. `unsafe_auto_rate` (auto-handled AND a human
-    would reject it) is the number I actually defend.
+11. **Headline metric is safe-automation rate, always shown with unsafe-auto
+    rate.** Not "automation %", because a system that auto-handles everything
+    scores 100% on that and is useless. Unsafe-auto (auto-handled and a human
+    would reject it) is the number I actually stand behind.
 
-12. **LLM stack is all Groq free tier: `qwen/qwen3.8-27b` (agent + Judge A),
-    `allam-2-7b` (Judge B, different lineage).** One free key, no card,
-    `make all` costs $0. Free-tier limits discovered from the response headers:
-    `qwen`/`allam` are ~1000 req/**min** (good); the `openai/gpt-oss-*` models
-    are 1000 req/**day** (avoid — we burned a day's quota finding this out).
-    All are reasoning-capable, and reasoning tokens count against the 8k
-    tokens/min cap, so `llm.py` (a) throttles per-`provider:model` (separate
-    buckets → concurrent), (b) trims every prompt and sets
-    `reasoning_effort=none` for classify/judge (`low` only for drafting),
-    (c) retries once with a bigger budget on an empty answer, (d) backs off on
-    429. A live `make all` takes ~20-30 min first time — hence the committed
-    cache. Model names on free tiers drift; `config.yaml` is the one place to fix.
+12. **All models are Groq's free tier.** `allam-2-7b` for the agent and Judge A,
+    `openai/gpt-oss-120b` for Judge B. One free key, no card. The free tier caps
+    each model at roughly 1000 requests/day and 6-8k tokens/minute, which I only
+    figured out by reading the response headers after a few slow runs. So
+    `llm.py` throttles per model, trims every prompt hard, turns reasoning off
+    for classify/judge, backs off on 429, and retries once bigger if a reasoning
+    model returns an empty answer. Model names on free tiers change; `config.yaml`
+    is the one place to swap them.
 
-13. **LLM-as-judge: same-model self-check + a cross-vendor check.** Judge A is
-    the *exact same* `qwen/qwen3.8-27b` that wrote the draft (maximal
-    self-preference risk, on purpose), Judge B is `allam-2-7b` (different
-    lineage). `A_minus_B` on the
-    agent vs on the simple baseline is the bias probe; **Judge B is the
-    conservative headline**. Judge validated against a human on 60 blind ratings
-    (Spearman + Cohen's κ); self-imposed rule: κ < ~0.4 ⇒ the headline quality
-    number must carry the caveat in REPORT §5.
+13. **Two judges: one is the drafter's own model, one isn't.** Judge A is the
+    same `allam-2-7b` that wrote the reply, which is the worst case for
+    self-preference and the point. Judge B is a different family. I validated
+    both against 50 of my own blind ratings before trusting either. Both failed
+    (Spearman near zero), which is the main finding in REPORT §5.
 
-14. **`overall` is asked of the judge separately, not computed as a mean of the
-    5 rubric dims.** Lets me check the holistic score against the dimensions and
-    catch judges that rubric-average instead of judging.
+14. **The judge gives a holistic 1-5 separately from the five rubric axes,** not
+    a mean of them. Lets me check the overall score against the parts and catch a
+    judge that's just averaging instead of judging.
 
-15. **Every LLM call cached by input-hash, seeded (seed=13), and the cache is
-    committed to the repo.** A reviewer runs `make all` and reproduces the exact
-    headline numbers in minutes with **no API keys and $0** — the cache replays.
-    It's committed as a single `llm-cache.tgz` (596 KB) that `make setup` /
-    `make all` unpack; `make bundle-cache` repacks it after a fresh run.
-    `rm -rf .cache/llm` + a key re-runs against the live free APIs. Cost: editing a
-    prompt or `config.yaml` silently misses the cache (documented in README).
+15. **Every LLM call is cached by an input hash (seed 13), and the cache is
+    committed** as `llm-cache.tgz` (~900 KB, unpacked by `make setup` / `make
+    all`, repacked by `make bundle-cache`). So a reviewer reproduces the exact
+    numbers with no key and no cost. Editing a prompt or `config.yaml` misses the
+    cache, which is noted in the README.
 
-16. **Subsample cap = 6000 threads.** Enough for stable retrieval + metrics,
-    small enough for the time budget. The assignment explicitly encourages
-    subsampling. Larger caps didn't move the headline in spot checks.
+16. **Subsample cap of 6000 threads.** Enough for stable retrieval and metrics,
+    small enough to fit the time budget. The brief encourages subsampling.
+    Larger caps didn't move the headline in spot checks.
+
+17. **Small models leak their control fields into the reply text**
+    ("Grounded: True, Missing info: None"). `drafting.py` strips those with a
+    regex before the reply is used or judged. A stronger drafter wouldn't need
+    it; this is a patch, not a fix.

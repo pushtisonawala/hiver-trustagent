@@ -1,277 +1,263 @@
-# TrustAgent — Report
+# TrustAgent
 
-**Brand:** `@SpotifyCares` · **Dataset:** Kaggle `customer-support-on-twitter`
-· **Golden set:** {{ n_golden }} held-out test-period messages (see §3.1 for how they were labelled)
-· Numbers below are spliced from `results/metrics.json` by `scripts/render_report.py`.
+Brand: `@SpotifyCares`. Dataset: Kaggle `customer-support-on-twitter`.
+Golden set: {{ n_golden }} held-out messages I labelled myself (§3).
+
+The numbers in this doc are pulled straight from `results/metrics.json` by
+`scripts/render_report.py`, so they can't drift from what the code actually
+produced.
 
 ---
 
 ## 1. Problem framing
 
-### What "good" means for @SpotifyCares
+### What "good" looks like for this brand
 
-Spotify's public support is high-volume, low-severity, and *mostly
-self-contained*: playback bugs, offline sync, Connect/device pairing, "where did
-this song go". A meaningful slice can be resolved with a known instruction the
-brand has already given dozens of times. That is the opportunity.
+I read a few hundred @SpotifyCares threads before picking a target. Most of the
+volume is low-severity and self-contained: songs won't play, offline downloads
+vanished, Connect can't see the speaker, "where did this album go". Spotify has
+answered these hundreds of times with the same handful of fixes, so there's a
+real slice a bot could take.
 
-But a hard core is **account- and money-shaped**: double charges, "I cancelled
-and you billed me", compromised accounts, student-pricing reverification. Here
-the *right* public reply is almost always "we'll take this to DM" — the
-resolution happens off the transcript, needs identity verification, and a wrong
-confident answer is actively harmful (false refund promises, privacy).
+The rest is account- and money-shaped: double charges, "I cancelled and you
+billed me again", hacked accounts, student pricing that stopped applying. For
+those the correct public reply is almost always "let's move to DM". The actual
+resolution happens off the transcript and needs identity checks, and a confident
+wrong answer here is genuinely harmful (a false refund promise, leaking that an
+email is on an account).
 
-So "good" for this brand is not "answer everything". It is:
+So "good" here isn't "answer everything". It's:
 
-1. **Route correctly.** Never auto-handle an account/billing/safety message.
-   A missed escalation is far worse than a needless one.
-2. **When it does answer, be grounded.** Every step in the reply should trace to
-   something Spotify actually told a customer before, in a thread that looked
-   resolved.
-3. **Sound like @SpotifyCares.** Short, warm, lowercase-friendly, ≤1 emoji.
-4. **Be honest about coverage.** A system that safely handles 25% of tweets well
-   beats one that "handles" 90% and ships nonsense on a fifth of them.
+- Route safely. Never auto-answer an account/billing/security message. Missing an
+  escalation costs a lot more than a needless one.
+- When it does answer, don't make things up. Every step should trace back to
+  something Spotify actually told a customer, in a thread that looked resolved.
+- Sound like the brand. Short, warm, lowercase is fine, one emoji at most.
+- Be upfront about coverage. Safely handling 25% well beats "handling" 90% and
+  shipping nonsense on a chunk of it.
 
-The headline metric I optimise for is therefore **safe-automation rate** =
-fraction of all traffic that is *both* auto-handled *and* judged acceptable
-(overall ≥ 4) — reported next to its dangerous twin, **unsafe-auto rate**
-(auto-handled but not acceptable).
+The number I care about most is **safe-automation rate**: share of all traffic
+that gets auto-handled *and* would pass a human. I always report it next to
+**unsafe-auto rate**, the share that got auto-handled but shouldn't have.
 
-### What I deliberately did **not** build
+### What I didn't build, on purpose
 
-| Not built | Why |
-|---|---|
-| Multi-turn dialogue agent | The dataset's public threads mostly truncate at "DM us". Single inbound message → decision is the realistic, evaluable unit. Multi-turn is [§7](#7-what-id-do-with-one-more-week). |
-| Fine-tuned classifier / fine-tuned generator | 200 gold labels is too few to fine-tune honestly; few-shot + a distilled TF-IDF baseline shows the ceiling and floor. |
-| A real "resolved?" label | No ground truth exists. I use a weak heuristic (`resolution.py`) and treat it as a known error source, not truth. |
-| Retrieval over the full history | Temporal leakage. Index is train-period only. |
-| Actually sending replies / a UI | Out of scope; `trustagent demo` is the inspection surface. |
-| Tuning to beat the LLM judge | The judge is a measuring instrument; optimising against it corrupts it. |
-
----
-
-## 2. System (one paragraph)
-
-`classify → retrieve → draft → decide`. Intent = 9-label few-shot classifier
-(taxonomy bootstrapped by KMeans over embeddings, then hand-curated — see
-`artifacts/taxonomy_bootstrap.json` and DECISION_LOG #4). Retrieval = nearest
-neighbours over *train-period* `(customer message → brand reply)` pairs, each
-weighted by a resolution-likelihood score. Draft = an open model
-(`{{ judge_cross_vendor.agent_drafts_by_ }}`, Groq free tier) constrained to the
-retrieved evidence, emitting `{reply, used_evidence, grounded, missing_info}`.
-Decide =
-a readable rule stack (`policy.py`): hard-escalate keywords, low intent
-confidence, weak precedent, high-risk intent without strong precedent,
-ungrounded draft, account-specific info required, churn sentiment — any hit ⇒
-`escalate`, with the triggered rules as the human-readable reason.
+- **Multi-turn dialogue.** The public threads mostly cut off at "DM us", so I
+  can't evaluate a conversation honestly on this data. One inbound message ->
+  decision is the unit I can actually score. (This came back to bite me, see §6.)
+- **Any fine-tuning.** {{ n_golden }} labels isn't enough to fine-tune without
+  fooling myself. Few-shot plus a distilled linear baseline shows the ceiling and
+  the floor.
+- **A real "was this resolved" label.** There isn't one in the data. I use a
+  regex heuristic over the customer's follow-up and treat it as a known source of
+  error, not truth.
+- **Retrieval over the whole history.** That leaks the future into the index. It
+  only sees the training period.
+- **A UI or actually sending replies.** Out of scope. `make demo` is the way to
+  poke at it (see README).
+- **Tuning anything to please the LLM judge.** The judge is a ruler. If I bend
+  the system to score well on it, I've broken the ruler.
 
 ---
 
-## 3. Evaluation design
+## 2. How it works
 
-### 3.1 Golden set ({{ n_golden }} examples)
+Four steps: classify, retrieve, draft, decide.
 
-- **Source:** test split only — the newest 20% of `@SpotifyCares` threads by
-  time, unseen by the retrieval index and the classifier's weak labels.
-- **Sampling:** stratified by (suggested intent × message-length bucket ×
-  early/late half of the test window), proportional with a floor of 4 per intent
-  so rare high-risk intents survive the draw.
-- **Labelling:** every row labelled by hand in `build_golden_set.py --review`
-  with the real historical reply and top precedent visible; LLM suggestions
-  shown but overridable (and overridden — see `agree_rate` in the note).
-  Fields: `gold_intent`, `gold_action`, free-text `gold_notes`.
-- **Second rater:** {{ judge_validation.n }} rows (`adjudication_sample.csv`)
-  relabelled independently; agreement in `results/metrics.json`.
-- Full protocol: [`golden/SAMPLING_NOTE.md`](golden/SAMPLING_NOTE.md),
-  [`golden/labelling_guide.md`](golden/labelling_guide.md).
+Intent is a 9-label few-shot classifier. I got to the 9 labels by clustering
+~2k training messages (KMeans over embeddings), reading the top terms and nearest
+examples per cluster, then merging by hand. The raw clusters split "playback"
+three ways and lumped every money problem together, so the final taxonomy is a
+judgement call (`artifacts/taxonomy_bootstrap.json` has the evidence).
+
+Retrieval is nearest-neighbour over training-period `(customer message -> brand
+reply)` pairs, each weighted by how likely that reply looked resolved. Drafting
+is a small open model on Groq's free tier
+(`{{ judge_cross_vendor.agent_drafts_by_ }}`), told to only use fixes that appear
+in the retrieved evidence and to hand back
+`{reply, used_evidence, grounded, missing_info}`.
+
+The decide step is a plain rule stack in `policy.py`, not a model. It escalates
+on: hard keywords (fraud, chargeback, hacked, GDPR...), low classifier
+confidence, no similar precedent, a high-risk intent without strong precedent, a
+draft the model couldn't ground, a draft that needs account-specific info, or
+churn language. Any hit escalates, and the triggered rules are the reason string
+a human sees. I kept this readable on purpose, a support lead should be able to
+audit why anything escalated.
+
+---
+
+## 3. Evaluation
+
+### 3.1 Golden set ({{ n_golden }} rows)
+
+Drawn from the **test split only**: the newest slice of @SpotifyCares threads by
+time, which the retrieval index and the classifier's weak labels never see.
+Stratified by (suggested intent x message length x early/late half of the test
+window), with a floor per intent so the rare high-risk ones don't disappear.
+
+I labelled every row myself in `build_golden_set.py --review`, with the real
+historical reply and the top retrieved precedent visible. First pass agreed with
+the model's suggestion ~95% of the time on intent, which honestly is because the
+suggestions were mostly fine. That first pass also dumped 84 of 148 rows into the
+catch-all `other` bucket, which is what the model does when it's unsure. `other`
+is supposed to mean "spam / joke / nothing actionable", so I did a second pass
+(`refine_other.py`) over just those rows and moved 58 to their real intent.
+Details and the honest caveats are in `golden/SAMPLING_NOTE.md`.
+
+There's a 40-row adjudication sample set aside for a second rater. I didn't get
+that inter-annotator number, so single-annotator bias is real here (§5).
 
 ### 3.2 Metrics
 
-| Axis | Metric | Why this one |
+| What | Metric | Why |
 |---|---|---|
-| Intent | accuracy, **macro-F1**, per-class F1, confusion, **ECE** | macro-F1 because high-risk intents are rare; ECE because the policy trusts the confidence number |
-| Escalation | precision/recall on "should escalate", **cost/msg** (5× / 1×) | F1 treats both errors equally; operations do not |
-| Reply quality | LLM-judge rubric ×5 (groundedness, correctness, completeness, tone, safety) + holistic `overall` | one number hides *why* a reply is bad |
-| Coverage vs quality | **deferral curve**: mean quality on the auto-handled subset as the confidence threshold sweeps | the headline quality number is meaningless without the coverage it was measured at |
-| Uncertainty | 2000× **bootstrap 95% CI** on headline quality | n≈200 → wide intervals; say so |
+| Intent | accuracy, macro-F1, per-class F1, confusion, ECE | macro-F1 because the risky intents are rare; ECE because the policy trusts the confidence score |
+| Escalation | precision/recall on "should escalate", cost/msg at 5x/1x | plain F1 treats both mistakes the same, ops doesn't |
+| Reply quality | 5-axis LLM-judge rubric + a holistic score | one number hides *why* a reply is bad |
+| Coverage vs quality | deferral curve: quality on the auto-handled subset as the confidence bar moves | a quality number means nothing without the coverage it was measured at |
+| Uncertainty | bootstrap 95% CI on the headline | n is small, the intervals are wide, better to show it |
 
-### 3.3 LLM-as-judge + human agreement
+### 3.3 LLM-as-judge, and checking it against a human
 
-Rubric in `judge.py`. **Judge A = {{ judge_cross_vendor.judge_a_model }}** (the
-same model as the drafter — a deliberate self-preference test), **Judge B =
-{{ judge_cross_vendor.judge_b_model }}** (a different model lineage).
+Rubric is in `judge.py`. Judge A is `{{ judge_cross_vendor.judge_a_model }}`, the
+same model that writes the drafts (a deliberate worst-case for self-preference).
+Judge B is `{{ judge_cross_vendor.judge_b_model }}`, a different model family.
 
-Validation (`scripts/judge_validation.py`, n = {{ judge_validation.n }} replies
-rated blind by a human):
+I rated {{ judge_validation.n }} replies blind myself and compared:
 
 | | Judge A | Judge B |
 |---|---|---|
-| Spearman vs human | {{ judge_validation.judge_a.spearman | .2f }} | {{ judge_validation.judge_b.spearman | .2f }} |
-| MAE vs human (1–5) | {{ judge_validation.judge_a.mae | .2f }} | {{ judge_validation.judge_b.mae | .2f }} |
-| within ±1 of human | {{ judge_validation.judge_a.within_1 | .0% }} | {{ judge_validation.judge_b.within_1 | .0% }} |
+| Spearman vs me | {{ judge_validation.judge_a.spearman | .2f }} | {{ judge_validation.judge_b.spearman | .2f }} |
+| MAE vs me (1-5) | {{ judge_validation.judge_a.mae | .2f }} | {{ judge_validation.judge_b.mae | .2f }} |
+| within 1 point of me | {{ judge_validation.judge_a.within_1 | .0% }} | {{ judge_validation.judge_b.within_1 | .0% }} |
 | Cohen's κ on "acceptable" | {{ judge_validation.judge_a.cohen_kappa_accept | .2f }} | {{ judge_validation.judge_b.cohen_kappa_accept | .2f }} |
-| judge mean − human mean | {{ judge_validation.judge_a.judge_mean_minus_human_mean | +.2f }} | {{ judge_validation.judge_b.judge_mean_minus_human_mean | +.2f }} |
+| judge mean − my mean | {{ judge_validation.judge_a.judge_mean_minus_human_mean | +.2f }} | {{ judge_validation.judge_b.judge_mean_minus_human_mean | +.2f }} |
 
-Judge-vs-judge: Spearman {{ judge_validation.judge_a_vs_judge_b.spearman | .2f }},
-MAE {{ judge_validation.judge_a_vs_judge_b.mae | .2f }}.
-
-**Rule I set myself:** if κ on "acceptable" is below ~0.4 for both judges, the
-headline quality number is not allowed to stand without the caveat in §5.
+The rule I set before running this: if κ is under ~0.4 for both judges, the
+quality headline doesn't get to stand without the caveat in §5. It's under 0.4.
+More on that below.
 
 ---
 
-## 4. Results vs baselines
+## 4. Results
 
-Baselines: **trivial-1** majority-intent + canned reply + escalate-all;
-**trivial-2** same but auto-handle-all; **simple** TF-IDF+LogReg intent
-(distilled from LLM weak labels) + verbatim top-1 past reply + rule-based gate,
-*no generative model*.
+Baselines: two trivial ones (majority intent + canned reply, one escalates
+everything, one auto-handles everything), and a "simple" one that's a TF-IDF +
+logistic-regression classifier distilled from LLM weak labels, plus the top
+retrieved reply verbatim, plus the same rule-based gate. No generative model in
+the simple baseline.
 
 <!-- INCLUDE:results/RESULTS.md -->
 
-**How to read this table** (direction depends on your run — the analysis does not):
+Reading the table:
 
-- **Intent:** the gap between `simple` and `agent` macro-F1 is the value the LLM
-  adds over cheap distillation. If it is small, the taxonomy is mostly
-  lexically separable and the LLM classifier is not worth its latency.
-- **Escalation:** `trivial_always_auto` has auto-handle rate 1.0 and the worst
-  cost/msg — that is the number a naïve "automation %" headline would celebrate.
-  `trivial_always_escalate` has cost driven purely by needless escalations and
-  is the safety ceiling. The agent should sit between them on cost, closer to
-  escalate-all.
-- **Quality:** compare `mean_overall_all` (every draft) with
-  `mean_overall_auto_only` (only what got shipped). The second should be higher —
-  if it is not, the gate is not selecting the replies the drafter is good at.
-- **`unsafe_auto_rate` is the real headline.** It is the fraction of *all*
-  traffic where the agent shipped a reply a human would reject. Everything else
-  is secondary to keeping this near zero.
-- CI on agent quality: {{ models.agent.quality_judge_a.mean_overall_ci95 }}.
-- Agent intent ECE: {{ models.agent.intent.ece | .3f }} (lower = confidence is
-  trustworthy; the policy leans on it).
+The `simple` -> `agent` gap on macro-F1 is what the LLM buys over cheap
+distillation. `trivial_always_auto` auto-handles 100% and has the worst cost per
+message, which is exactly the number a naive "automation %" pitch would brag
+about. `unsafe_auto_rate` is the one I'd actually defend: the fraction of all
+traffic where the agent shipped something a human would reject.
 
-See `results/deferral_curve.png` for quality-vs-coverage and
-`results/confusion_agent.png` for where intent errors concentrate.
+Bootstrap CI on agent quality: {{ models.agent.quality_judge_a.mean_overall_ci95 }}.
+Agent intent calibration (ECE): {{ models.agent.intent.ece | .3f }}. That's not
+great, the confidence scores the policy leans on aren't very trustworthy, which
+is a problem given the gate uses a confidence threshold.
+
+`results/deferral_curve.png` is quality vs coverage; `results/confusion_agent.png`
+shows where the intent errors cluster (mostly `other` and `device_or_connect`,
+both of which are small).
 
 ---
 
-## 5. What is misleading about my headline number
+## 5. What's misleading about my headline number
 
-Take the headline as *"the agent's mean judged reply quality is
-{{ models.agent.quality_judge_a.mean_overall_all | .2f }}/5 (Judge A) and it
-safely automates {{ models.agent.quality_judge_a.safe_automation_rate | .0% }} of
-traffic."* Here is why you should not believe it as stated.
+Say the headline is *"{{ models.agent.quality_judge_a.mean_overall_all | .2f }}/5
+mean reply quality, {{ models.agent.quality_judge_a.safe_automation_rate | .0% }}
+safely automated"*. Reasons not to trust that as written:
 
-0. **The judges do not agree with a human — so the quality number is barely
-   measuring quality.** I validated both against {{ judge_validation.n }} of my
-   own blind human ratings (§3.3). Spearman with the human:
-   **{{ judge_validation.judge_a.spearman | .2f }}** (Judge A) and
-   **{{ judge_validation.judge_b.spearman | .2f }}** (Judge B); Cohen's κ on
-   "acceptable" is {{ judge_validation.judge_a.cohen_kappa_accept | .2f }} and
-   {{ judge_validation.judge_b.cohen_kappa_accept | .2f }} — essentially zero.
-   Judge A runs {{ judge_validation.judge_a.judge_mean_minus_human_mean | +.2f }}
-   above my ratings, Judge B {{ judge_validation.judge_b.judge_mean_minus_human_mean | +.2f }}
-   below. **The self-imposed rule (κ < 0.4 ⇒ caveat) fires hard: the reply-quality
-   headline is model-specific bias plus noise, not a trustworthy score.** With
-   these free models I cannot report a defensible automated quality number at all
-   — the honest output is the *intent* and *escalation* metrics plus this
-   admission. This is the single most misleading thing in the report.
+**The judge doesn't track a human, so the quality number is mostly noise.**
+Against my {{ judge_validation.n }} blind ratings, Judge A correlates at
+{{ judge_validation.judge_a.spearman | .2f }} and Judge B at
+{{ judge_validation.judge_b.spearman | .2f }}. Both κ ≈ 0. Judge A sits
+{{ judge_validation.judge_a.judge_mean_minus_human_mean | +.2f }} above me, Judge
+B {{ judge_validation.judge_b.judge_mean_minus_human_mean | +.2f }} below. With
+these free models I can't put a defensible number on reply quality at all. The
+intent and escalation metrics are what carry this report; the quality score is a
+direction, not a measurement. This is the biggest problem with the headline and
+it's one I built the tooling to find.
 
-1. **The quality number is conditioned on the agent's own routing (selection
-   bias).** `mean_overall_auto_only` is measured only on messages the agent
-   *chose* to answer — the easy ones. It is not the quality you would get on a
-   random tweet. The honest figure is the deferral curve, not a point.
+**The quality number only covers the messages the agent chose to answer.**
+`mean_overall_auto_only` is measured on the easy subset the gate picked, not on a
+random tweet. The deferral curve is the honest version.
 
-2. **Judge A is the same model as the drafter.** The agent drafts with
-   `{{ judge_cross_vendor.agent_drafts_by_ }}` and Judge A is
-   `{{ judge_cross_vendor.judge_a_model }}` — literally the same weights grading
-   their own output, and it scores the agent
-   {{ judge_cross_vendor.A_minus_B_on_agent | +.2f }} above Judge B
-   (`{{ judge_cross_vendor.judge_b_model }}`, a different lineage). The gap is
-   actually *larger* on the simple baseline
-   ({{ judge_cross_vendor.A_minus_B_on_simple | +.2f }}), so this looks less like
-   targeted self-flattery and more like Judge A being uniformly generous — which
-   point 0 confirms.
+**Judge A is the drafter's own model.** It rates the agent
+{{ judge_cross_vendor.A_minus_B_on_agent | +.2f }} above Judge B. The gap is
+actually bigger on the simple baseline
+({{ judge_cross_vendor.A_minus_B_on_simple | +.2f }}), so this reads less like
+targeted self-flattery and more like Judge A just being soft on everything.
 
-3. **"Resolved" is a heuristic, and it is optimistic.** Retrieval grounding
-   prefers past replies where the customer said "thanks" or didn't reply again.
-   Silent churn — customer gives up and leaves — looks *identical* to success.
-   So the evidence pool is biased toward replies that pacified people, not
-   necessarily replies that fixed things.
+**"Resolved" is a guess, and an optimistic one.** Grounding prefers past replies
+where the customer said thanks or went quiet. Someone giving up and churning
+looks the same as someone who got helped, so the evidence pool leans toward
+replies that calmed people down, not necessarily ones that fixed the problem.
 
-4. **The golden labels were made by the person who designed the taxonomy, in
-   two passes.** `gold_intent`, the 9-label taxonomy, and the pass-2
-   `other`→specific reclassification (`golden/SAMPLING_NOTE.md`) all came from
-   one head. Intent accuracy partly measures "does the classifier think like its
-   author", not "is the taxonomy right". A 40-row adjudication sample is set
-   aside for a second rater (`golden/adjudication_sample.csv`) but that
-   inter-annotator κ has not been collected yet — it is the missing guard.
+**I designed the taxonomy and I labelled the golden set, twice.** So intent
+accuracy is partly measuring "does the classifier think like me". The
+second-rater check exists on paper (`adjudication_sample.csv`) but I didn't run
+it.
 
-5. **No distribution shift is tested.** Train and test are both Oct–Dec 2017,
-   same product, same support team. Real deployment faces new features, new bug
-   waves, policy changes. The temporal split removes *leakage*; it does not
-   simulate *drift*. Expect every number to decay in production.
+**Nothing here tests distribution shift.** Train and test are both late 2017,
+same product, same support team. Real deployment hits new features and new bug
+waves. The temporal split kills leakage, it doesn't simulate drift. Expect every
+number to sag in production.
 
-6. **Macro-F1 hides that the worst class is the one that matters.** Look at
-   per-class F1 in `results/metrics.json` for `account_access` /
-   `billing_subscription` / `cancel_or_refund` — they are rare, so a mediocre
-   score there barely moves macro-F1 but directly drives `unsafe_auto_rate`.
+**Macro-F1 averages away the classes that matter.** `account_access`,
+`billing_subscription`, `cancel_or_refund` are rare, so a weak score there barely
+moves macro-F1 but is exactly what would drive unsafe auto-handling.
 
-7. **n ≈ {{ n_golden }} → wide intervals.** The bootstrap CI on agent quality is
-   {{ models.agent.quality_judge_a.mean_overall_ci95 }}. Differences between the
-   agent and the simple baseline that are smaller than that interval are noise.
+**n = {{ n_golden }}.** The CI on quality is
+{{ models.agent.quality_judge_a.mean_overall_ci95 }}. Any agent-vs-simple gap
+smaller than that is noise.
 
-8. **Single-message evaluation flatters the agent.** Real threads have context
-   ("still not working after I did that"). Scoring the first message only means
-   the agent is never penalised for the multi-turn derailments it would have.
+**Escalating is treated as almost free.** Cost/msg only charges a needless
+escalation 1x, but a system that escalates 90% of the time hasn't reduced human
+load, which was the whole point.
 
-9. **Escalations are graded as free.** Cost/msg charges a needless escalation
-   1×, but in reality a 90% escalation rate means you have not reduced human
-   load at all — the project's actual goal. The metric rewards a coward.
-
-10. **Judge and gold both from English, mostly-US tweets.** Non-English and
-    code-switched messages (present in the raw data) are under-sampled in the
-    golden set and the judge is weakest there.
-
-**What would make me trust it:** a judge that actually passes human validation
-(κ > 0.6) — likely a frontier model, or an ensemble with a rationale audit —
-quoted *with* its CI, *at a fixed coverage* from the deferral curve, with
-`unsafe_auto_rate` on the high-risk intents reported separately and required to
-be ~0, plus a fresh 100-message sample from a *later* time slice. Until then the
-intent and escalation numbers carry the report; the quality number is a
-directional signal at best.
+To actually trust a quality number I'd want a judge that passes human validation
+(κ > 0.6, probably a frontier model or an ensemble with a rationale audit),
+quoted with its CI at a fixed point on the deferral curve, with unsafe-auto
+broken out for the high-risk intents and held near zero, checked against a fresh
+sample from a later time slice.
 
 ---
 
-## 6. Failure analysis (top 5)
+## 6. Failure analysis
 
 <!-- INCLUDE:results/failure_analysis.md -->
 
 ---
 
-## 7. What I'd do with one more week
+## 7. With another week
 
-1. **Multi-turn.** Feed the last 3 turns; re-label ~60 golden rows as
-   conversations; measure derailment rate.
-2. **Per-intent thresholds** tuned against the cost matrix by grid search on a
-   dev split, instead of one global `min_retrieval_support`.
-3. **Groundedness verifier.** A second pass that deletes any reply sentence an
-   NLI check can't entail from the evidence — turn "grounded" from a
-   self-reported bool into a measured rate.
-4. **Better "resolved" signal.** Train a small classifier on ~300 hand-labelled
-   (thread → resolved?) examples to replace the regex heuristic; propagate its
-   uncertainty into retrieval weighting.
-5. **Judge ensemble + rationale audit.** 3 judges, median score, and spot-check
-   50 rationales for the failure modes judges are known to have (length bias,
-   politeness bias).
-6. **Distribution-shift harness.** Slice the test window into months; report the
-   metric trajectory, not a single value.
-7. **Human-in-the-loop cost model.** Replace the 5×/1× guess with real handle
-   times from Hiver-style data if available.
+1. Multi-turn. Feed the last few turns as context, re-label ~60 golden rows as
+   conversations, measure how often it derails. This is failure mode #1.
+2. Per-intent escalation thresholds instead of one global bar, tuned against the
+   cost matrix on a dev split.
+3. A real groundedness check: a second pass that drops any sentence an NLI model
+   can't entail from the evidence, so "grounded" becomes a measured rate instead
+   of the drafter's own say-so.
+4. A trained "was this resolved" classifier (~300 hand labels) to replace the
+   regex, and carry its uncertainty into retrieval weighting.
+5. A judge ensemble (3 models, median) plus spot-checking 50 rationales for the
+   biases judges are known to have (length, politeness).
+6. Slice the test window by month and report the metric trajectory, not one
+   number.
+7. Swap the 5x/1x cost guess for real handle times if that data exists.
 
 ---
 
 ## Appendix
 
-- Non-obvious decisions: [DECISION_LOG.md](DECISION_LOG.md)
-- Reproduce: [README.md](README.md) · environment: [SETUP.md](SETUP.md)
+- Decisions and trade-offs: [DECISION_LOG.md](DECISION_LOG.md)
+- Setup and reproduction: [README.md](README.md), [SETUP.md](SETUP.md)
 - Raw numbers: [`results/metrics.json`](results/metrics.json)

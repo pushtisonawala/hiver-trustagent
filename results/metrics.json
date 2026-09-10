@@ -595,17 +595,17 @@
         ]
       },
       "quality_judge_b": {
-        "mean_overall_all": 2.7,
-        "acceptable_rate_all": 0.2,
+        "mean_overall_all": 2.6333333333333333,
+        "acceptable_rate_all": 0.16666666666666666,
         "mean_overall_auto_only": 1.0,
         "acceptable_rate_auto_only": 0.0,
         "safe_automation_rate": 0.0,
         "unsafe_auto_rate": 0.03333333333333333,
         "per_dimension_mean": {
-          "groundedness": 4.166666666666667,
+          "groundedness": 4.2,
           "correctness": 3.0,
-          "completeness": 1.9666666666666666,
-          "tone": 4.3,
+          "completeness": 1.8666666666666667,
+          "tone": 4.333333333333333,
           "safety": 4.866666666666666
         },
         "n": 30
@@ -787,53 +787,53 @@
         "ece": 0.2866666666666667
       },
       "escalation": {
-        "precision": 0.75,
+        "precision": 0.7358490566037735,
         "recall": 0.9397590361445783,
-        "f1": 0.8342245989304812,
-        "auto_handle_rate": 0.2972972972972973,
+        "f1": 0.8253968253968254,
+        "auto_handle_rate": 0.28378378378378377,
         "false_auto_handle": 5,
-        "needless_escalation": 26,
-        "cost_per_msg": 0.34459459459459457,
+        "needless_escalation": 28,
+        "cost_per_msg": 0.3581081081081081,
         "confusion": {
           "tp": 78,
-          "fp": 26,
+          "fp": 28,
           "fn": 5,
-          "tn": 39
+          "tn": 37
         }
       },
       "quality_judge_a": {
-        "mean_overall_all": 4.833333333333333,
-        "acceptable_rate_all": 0.9666666666666667,
+        "mean_overall_all": 4.9,
+        "acceptable_rate_all": 1.0,
         "mean_overall_auto_only": 4.909090909090909,
         "acceptable_rate_auto_only": 1.0,
         "safe_automation_rate": 0.36666666666666664,
         "unsafe_auto_rate": 0.0,
         "per_dimension_mean": {
           "groundedness": 4.633333333333334,
-          "correctness": 4.866666666666666,
-          "completeness": 4.866666666666666,
-          "tone": 4.833333333333333,
+          "correctness": 4.933333333333334,
+          "completeness": 4.933333333333334,
+          "tone": 4.9,
           "safety": 5.0
         },
         "n": 30,
         "mean_overall_ci95": [
-          4.833333333333333,
-          4.666666666666667,
-          4.966666666666667
+          4.9,
+          4.766666666666667,
+          5.0
         ]
       },
       "quality_judge_b": {
-        "mean_overall_all": 3.5,
-        "acceptable_rate_all": 0.7,
-        "mean_overall_auto_only": 3.6363636363636362,
+        "mean_overall_all": 3.433333333333333,
+        "acceptable_rate_all": 0.6,
+        "mean_overall_auto_only": 3.727272727272727,
         "acceptable_rate_auto_only": 0.7272727272727273,
         "safe_automation_rate": 0.26666666666666666,
         "unsafe_auto_rate": 0.1,
         "per_dimension_mean": {
-          "groundedness": 2.7666666666666666,
-          "correctness": 3.6,
+          "groundedness": 2.533333333333333,
+          "correctness": 3.7333333333333334,
           "completeness": 3.3,
-          "tone": 4.033333333333333,
+          "tone": 4.166666666666667,
           "safety": 4.933333333333334
         },
         "n": 30
@@ -844,42 +844,42 @@
     {
       "threshold": 0.8,
       "coverage": 1.0,
-      "mean_quality_auto": 4.833333333333333
+      "mean_quality_auto": 4.9
     },
     {
       "threshold": 0.8142857142857143,
       "coverage": 0.4666666666666667,
-      "mean_quality_auto": 4.785714285714286
+      "mean_quality_auto": 4.928571428571429
     },
     {
       "threshold": 0.8285714285714286,
       "coverage": 0.4666666666666667,
-      "mean_quality_auto": 4.785714285714286
+      "mean_quality_auto": 4.928571428571429
     },
     {
       "threshold": 0.8428571428571429,
       "coverage": 0.4666666666666667,
-      "mean_quality_auto": 4.785714285714286
+      "mean_quality_auto": 4.928571428571429
     },
     {
       "threshold": 0.8571428571428572,
       "coverage": 0.4666666666666667,
-      "mean_quality_auto": 4.785714285714286
+      "mean_quality_auto": 4.928571428571429
     },
     {
       "threshold": 0.8714285714285714,
       "coverage": 0.4666666666666667,
-      "mean_quality_auto": 4.785714285714286
+      "mean_quality_auto": 4.928571428571429
     },
     {
       "threshold": 0.8857142857142857,
       "coverage": 0.4666666666666667,
-      "mean_quality_auto": 4.785714285714286
+      "mean_quality_auto": 4.928571428571429
     },
     {
       "threshold": 0.9,
       "coverage": 0.4666666666666667,
-      "mean_quality_auto": 4.785714285714286
+      "mean_quality_auto": 4.928571428571429
     },
     {
       "threshold": 0.9142857142857143,
@@ -921,13 +921,13 @@
     "judge_a_model": "allam-2-7b",
     "judge_b_model": "openai/gpt-oss-120b",
     "agent_drafts_by_": "allam-2-7b",
-    "A_scores_agent": 4.833333333333333,
-    "B_scores_agent": 3.5,
+    "A_scores_agent": 4.9,
+    "B_scores_agent": 3.433333333333333,
     "A_scores_simple": 4.633333333333334,
-    "B_scores_simple": 2.7,
-    "A_minus_B_on_agent": 1.333333333333333,
+    "B_scores_simple": 2.6333333333333333,
+    "A_minus_B_on_agent": 1.4666666666666672,
     "note": "Agent drafts are written by the same vendor as Judge A. A positive A_minus_B_on_agent that is larger than A_minus_B_on_simple is a self-preference red flag.",
-    "A_minus_B_on_simple": 1.9333333333333336
+    "A_minus_B_on_simple": 2.0000000000000004
   },
   "judge_validation": {
     "n": 48,

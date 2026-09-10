@@ -2,9 +2,17 @@
 from __future__ import annotations
 
 import json
+import re
 
 from . import llm
 from .config import Config
+
+# small models sometimes serialise their control fields into the reply text
+# ("Grounded: True", "Missing info: None", "Evidence used: [3, 4]"). strip it.
+_LEAK = re.compile(
+    r"\s*[\.,;]?\s*(grounded|missing[_ ]info|evidence[_ ]used|used[_ ]evidence)\s*[:=].*?$",
+    re.I | re.S,
+)
 
 VOICE = (
     "Spotify support agent replying on Twitter/X. Warm, concise, lowercase-ok, "
@@ -45,6 +53,7 @@ def draft_reply(customer_text: str, intent: str, hits: list[dict], cfg: Config) 
         )
         d = llm.parse_json(raw)
         d.setdefault("reply", "")
+        d["reply"] = _LEAK.sub("", str(d["reply"])).strip().rstrip(",;")
         d.setdefault("used_evidence", [])
         d.setdefault("grounded", bool(hits))
         d.setdefault("missing_info", [])
