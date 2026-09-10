@@ -1,0 +1,1 @@
+{"payload": {"provider": "groq", "model": "openai/gpt-oss-20b", "system": "You are a classifier.", "user": "Classify: my app keeps crashing. Return JSON {\"intent\":\"x\",\"confidence\":0.5}", "max_tokens": 900, "json_mode": true, "temperature": 0.0}, "response": "{\"intent\":\"app_crash\",\"confidence\":0.9}"}

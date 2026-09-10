@@ -1,0 +1,1 @@
+{"payload": {"provider": "groq", "model": "openai/gpt-oss-20b", "system": "Classify. JSON {\"intent\":\"x\",\"confidence\":0.5}", "user": "family plan issue", "max_tokens": 900, "json_mode": true, "temperature": 0.0}, "response": "{\"intent\":\"family_plan_issue\",\"confidence\":0.8}"}

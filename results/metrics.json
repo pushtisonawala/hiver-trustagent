@@ -1,0 +1,932 @@
+{
+  "brand": "SpotifyCares",
+  "n_golden": 60,
+  "seed": 13,
+  "retriever_mode": "tfidf",
+  "models": {
+    "trivial_always_escalate": {
+      "intent": {
+        "accuracy": 0.16666666666666666,
+        "macro_f1": 0.031746031746031744,
+        "weighted_f1": 0.04761904761904761,
+        "per_class": {
+          "playback_or_app_bug": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 9.0
+          },
+          "account_access": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 6.0
+          },
+          "billing_subscription": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 10.0
+          },
+          "cancel_or_refund": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 4.0
+          },
+          "family_or_duo_plan": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 4.0
+          },
+          "content_availability": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 5.0
+          },
+          "device_or_connect": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 4.0
+          },
+          "feature_request_or_feedback": {
+            "precision": 0.16666666666666666,
+            "recall": 1.0,
+            "f1-score": 0.2857142857142857,
+            "support": 10.0
+          },
+          "other": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 8.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            9,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            6,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            10,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            5,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            10,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            8,
+            0
+          ]
+        ],
+        "labels": [
+          "playback_or_app_bug",
+          "account_access",
+          "billing_subscription",
+          "cancel_or_refund",
+          "family_or_duo_plan",
+          "content_availability",
+          "device_or_connect",
+          "feature_request_or_feedback",
+          "other"
+        ]
+      },
+      "escalation": {
+        "precision": 0.7166666666666667,
+        "recall": 1.0,
+        "f1": 0.8349514563106796,
+        "auto_handle_rate": 0.0,
+        "false_auto_handle": 0,
+        "needless_escalation": 17,
+        "cost_per_msg": 0.2833333333333333,
+        "confusion": {
+          "tp": 43,
+          "fp": 17,
+          "fn": 0,
+          "tn": 0
+        }
+      }
+    },
+    "trivial_always_auto": {
+      "intent": {
+        "accuracy": 0.16666666666666666,
+        "macro_f1": 0.031746031746031744,
+        "weighted_f1": 0.04761904761904761,
+        "per_class": {
+          "playback_or_app_bug": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 9.0
+          },
+          "account_access": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 6.0
+          },
+          "billing_subscription": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 10.0
+          },
+          "cancel_or_refund": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 4.0
+          },
+          "family_or_duo_plan": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 4.0
+          },
+          "content_availability": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 5.0
+          },
+          "device_or_connect": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 4.0
+          },
+          "feature_request_or_feedback": {
+            "precision": 0.16666666666666666,
+            "recall": 1.0,
+            "f1-score": 0.2857142857142857,
+            "support": 10.0
+          },
+          "other": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 8.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            9,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            6,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            10,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            5,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            10,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            8,
+            0
+          ]
+        ],
+        "labels": [
+          "playback_or_app_bug",
+          "account_access",
+          "billing_subscription",
+          "cancel_or_refund",
+          "family_or_duo_plan",
+          "content_availability",
+          "device_or_connect",
+          "feature_request_or_feedback",
+          "other"
+        ]
+      },
+      "escalation": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "auto_handle_rate": 1.0,
+        "false_auto_handle": 43,
+        "needless_escalation": 0,
+        "cost_per_msg": 3.5833333333333335,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 43,
+          "tn": 17
+        }
+      }
+    },
+    "simple": {
+      "intent": {
+        "accuracy": 0.5166666666666667,
+        "macro_f1": 0.4705467372134039,
+        "weighted_f1": 0.491957671957672,
+        "per_class": {
+          "playback_or_app_bug": {
+            "precision": 0.4444444444444444,
+            "recall": 0.4444444444444444,
+            "f1-score": 0.4444444444444444,
+            "support": 9.0
+          },
+          "account_access": {
+            "precision": 0.4444444444444444,
+            "recall": 0.6666666666666666,
+            "f1-score": 0.5333333333333333,
+            "support": 6.0
+          },
+          "billing_subscription": {
+            "precision": 0.5714285714285714,
+            "recall": 0.8,
+            "f1-score": 0.6666666666666666,
+            "support": 10.0
+          },
+          "cancel_or_refund": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 4.0
+          },
+          "family_or_duo_plan": {
+            "precision": 1.0,
+            "recall": 0.75,
+            "f1-score": 0.8571428571428571,
+            "support": 4.0
+          },
+          "content_availability": {
+            "precision": 0.4,
+            "recall": 0.4,
+            "f1-score": 0.4,
+            "support": 5.0
+          },
+          "device_or_connect": {
+            "precision": 0.5,
+            "recall": 0.25,
+            "f1-score": 0.3333333333333333,
+            "support": 4.0
+          },
+          "feature_request_or_feedback": {
+            "precision": 0.5,
+            "recall": 0.4,
+            "f1-score": 0.4444444444444444,
+            "support": 10.0
+          },
+          "other": {
+            "precision": 0.5,
+            "recall": 0.625,
+            "f1-score": 0.5555555555555556,
+            "support": 8.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            4,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2
+          ],
+          [
+            1,
+            4,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2
+          ],
+          [
+            0,
+            2,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            2,
+            0
+          ],
+          [
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3,
+            0,
+            0,
+            2,
+            0,
+            4,
+            1
+          ],
+          [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            5
+          ]
+        ],
+        "labels": [
+          "playback_or_app_bug",
+          "account_access",
+          "billing_subscription",
+          "cancel_or_refund",
+          "family_or_duo_plan",
+          "content_availability",
+          "device_or_connect",
+          "feature_request_or_feedback",
+          "other"
+        ]
+      },
+      "escalation": {
+        "precision": 0.7288135593220338,
+        "recall": 1.0,
+        "f1": 0.8431372549019608,
+        "auto_handle_rate": 0.016666666666666666,
+        "false_auto_handle": 0,
+        "needless_escalation": 16,
+        "cost_per_msg": 0.26666666666666666,
+        "confusion": {
+          "tp": 43,
+          "fp": 16,
+          "fn": 0,
+          "tn": 1
+        }
+      },
+      "quality_judge_a": {
+        "mean_overall_all": 2.875,
+        "acceptable_rate_all": 0.425,
+        "mean_overall_auto_only": 5.0,
+        "acceptable_rate_auto_only": 1.0,
+        "safe_automation_rate": 0.025,
+        "unsafe_auto_rate": 0.0,
+        "per_dimension_mean": {
+          "groundedness": 4.975,
+          "correctness": 3.05,
+          "completeness": 2.675,
+          "tone": 3.975,
+          "safety": 5.0
+        },
+        "n": 40,
+        "mean_overall_ci95": [
+          2.875,
+          2.375,
+          3.35
+        ]
+      },
+      "quality_judge_b": {
+        "mean_overall_all": 4.85,
+        "acceptable_rate_all": 1.0,
+        "mean_overall_auto_only": 5.0,
+        "acceptable_rate_auto_only": 1.0,
+        "safe_automation_rate": 0.025,
+        "unsafe_auto_rate": 0.0,
+        "per_dimension_mean": {
+          "groundedness": 4.7,
+          "correctness": 4.8,
+          "completeness": 4.8,
+          "tone": 4.875,
+          "safety": 5.0
+        },
+        "n": 40
+      }
+    },
+    "agent": {
+      "intent": {
+        "accuracy": 0.8166666666666667,
+        "macro_f1": 0.8292127625460959,
+        "weighted_f1": 0.8234151034151033,
+        "per_class": {
+          "playback_or_app_bug": {
+            "precision": 1.0,
+            "recall": 0.6666666666666666,
+            "f1-score": 0.8,
+            "support": 9.0
+          },
+          "account_access": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 6.0
+          },
+          "billing_subscription": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 10.0
+          },
+          "cancel_or_refund": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 4.0
+          },
+          "family_or_duo_plan": {
+            "precision": 0.8,
+            "recall": 1.0,
+            "f1-score": 0.8888888888888888,
+            "support": 4.0
+          },
+          "content_availability": {
+            "precision": 1.0,
+            "recall": 0.4,
+            "f1-score": 0.5714285714285714,
+            "support": 5.0
+          },
+          "device_or_connect": {
+            "precision": 1.0,
+            "recall": 0.75,
+            "f1-score": 0.8571428571428571,
+            "support": 4.0
+          },
+          "feature_request_or_feedback": {
+            "precision": 0.8,
+            "recall": 0.8,
+            "f1-score": 0.8,
+            "support": 10.0
+          },
+          "other": {
+            "precision": 0.42857142857142855,
+            "recall": 0.75,
+            "f1-score": 0.5454545454545454,
+            "support": 8.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            6,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3
+          ],
+          [
+            0,
+            6,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            10,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            4,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            3
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            8,
+            2
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            6
+          ]
+        ],
+        "labels": [
+          "playback_or_app_bug",
+          "account_access",
+          "billing_subscription",
+          "cancel_or_refund",
+          "family_or_duo_plan",
+          "content_availability",
+          "device_or_connect",
+          "feature_request_or_feedback",
+          "other"
+        ],
+        "ece": 0.15325000000000016
+      },
+      "escalation": {
+        "precision": 0.9148936170212766,
+        "recall": 1.0,
+        "f1": 0.9555555555555556,
+        "auto_handle_rate": 0.21666666666666667,
+        "false_auto_handle": 0,
+        "needless_escalation": 4,
+        "cost_per_msg": 0.06666666666666667,
+        "confusion": {
+          "tp": 43,
+          "fp": 4,
+          "fn": 0,
+          "tn": 13
+        }
+      },
+      "quality_judge_a": {
+        "mean_overall_all": 3.8,
+        "acceptable_rate_all": 0.725,
+        "mean_overall_auto_only": 3.7142857142857144,
+        "acceptable_rate_auto_only": 0.7142857142857143,
+        "safe_automation_rate": 0.125,
+        "unsafe_auto_rate": 0.05,
+        "per_dimension_mean": {
+          "groundedness": 4.225,
+          "correctness": 4.125,
+          "completeness": 3.85,
+          "tone": 4.5,
+          "safety": 4.975
+        },
+        "n": 40,
+        "mean_overall_ci95": [
+          3.8,
+          3.45,
+          4.15
+        ]
+      },
+      "quality_judge_b": {
+        "mean_overall_all": 4.675,
+        "acceptable_rate_all": 1.0,
+        "mean_overall_auto_only": 4.714285714285714,
+        "acceptable_rate_auto_only": 1.0,
+        "safe_automation_rate": 0.175,
+        "unsafe_auto_rate": 0.0,
+        "per_dimension_mean": {
+          "groundedness": 4.3,
+          "correctness": 4.675,
+          "completeness": 4.675,
+          "tone": 4.75,
+          "safety": 5.0
+        },
+        "n": 40
+      }
+    }
+  },
+  "deferral_curve": [
+    {
+      "threshold": 0.9,
+      "coverage": 1.0,
+      "mean_quality_auto": 3.8
+    },
+    {
+      "threshold": 0.9057142857142857,
+      "coverage": 0.975,
+      "mean_quality_auto": 3.8461538461538463
+    },
+    {
+      "threshold": 0.9114285714285715,
+      "coverage": 0.975,
+      "mean_quality_auto": 3.8461538461538463
+    },
+    {
+      "threshold": 0.9171428571428571,
+      "coverage": 0.975,
+      "mean_quality_auto": 3.8461538461538463
+    },
+    {
+      "threshold": 0.9228571428571428,
+      "coverage": 0.975,
+      "mean_quality_auto": 3.8461538461538463
+    },
+    {
+      "threshold": 0.9285714285714286,
+      "coverage": 0.975,
+      "mean_quality_auto": 3.8461538461538463
+    },
+    {
+      "threshold": 0.9342857142857143,
+      "coverage": 0.975,
+      "mean_quality_auto": 3.8461538461538463
+    },
+    {
+      "threshold": 0.94,
+      "coverage": 0.975,
+      "mean_quality_auto": 3.8461538461538463
+    },
+    {
+      "threshold": 0.9457142857142857,
+      "coverage": 0.975,
+      "mean_quality_auto": 3.8461538461538463
+    },
+    {
+      "threshold": 0.9514285714285714,
+      "coverage": 0.15,
+      "mean_quality_auto": 4.0
+    },
+    {
+      "threshold": 0.9571428571428572,
+      "coverage": 0.15,
+      "mean_quality_auto": 4.0
+    },
+    {
+      "threshold": 0.9628571428571429,
+      "coverage": 0.15,
+      "mean_quality_auto": 4.0
+    },
+    {
+      "threshold": 0.9685714285714285,
+      "coverage": 0.15,
+      "mean_quality_auto": 4.0
+    },
+    {
+      "threshold": 0.9742857142857143,
+      "coverage": 0.15,
+      "mean_quality_auto": 4.0
+    },
+    {
+      "threshold": 0.98,
+      "coverage": 0.15,
+      "mean_quality_auto": 4.0
+    }
+  ],
+  "judge_cross_vendor": {
+    "judge_a_model": "qwen/qwen3.8-27b",
+    "judge_b_model": "allam-2-7b",
+    "agent_drafts_by_": "qwen/qwen3.8-27b",
+    "A_scores_agent": 3.8,
+    "B_scores_agent": 4.675,
+    "A_scores_simple": 2.875,
+    "B_scores_simple": 4.85,
+    "A_minus_B_on_agent": -0.875,
+    "note": "Agent drafts are written by the same vendor as Judge A. A positive A_minus_B_on_agent that is larger than A_minus_B_on_simple is a self-preference red flag.",
+    "A_minus_B_on_simple": -1.9749999999999996
+  }
+}

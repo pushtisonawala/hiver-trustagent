@@ -1,0 +1,68 @@
+tweet_id,author_id,inbound,created_at,text,response_tweet_id,in_response_to_tweet_id
+1001,50001,True,Mon Oct 02 09:12:00 +0000 2017,"@SpotifyCares my downloaded songs won't play offline on the train this morning, super annoying",1002,
+1002,SpotifyCares,False,Mon Oct 02 09:40:00 +0000 2017,"@50001 oof! try toggling offline mode off and on in Settings, then re-download the playlist while on wifi. that clears most sync issues 🎧",1003,1001
+1003,50001,True,Mon Oct 02 10:05:00 +0000 2017,"@SpotifyCares that fixed it, thank you!",,1002
+1004,50002,True,Tue Oct 03 14:20:00 +0000 2017,"@SpotifyCares I was charged twice for Premium this month, need one of those refunded",1005,
+1005,SpotifyCares,False,Tue Oct 03 14:55:00 +0000 2017,"@50002 that's not right — we don't have access to card details here, can you DM us the email on the account so we can check the charges?",1006,1004
+1006,50002,True,Tue Oct 03 15:30:00 +0000 2017,"@SpotifyCares sent you a DM",,1005
+1007,50003,True,Wed Oct 04 08:00:00 +0000 2017,"@SpotifyCares can't log in, it keeps saying my password is wrong and the reset email never arrives",1008,
+1008,SpotifyCares,False,Wed Oct 04 08:30:00 +0000 2017,"@50003 check your spam folder for the reset mail, and make sure you're resetting from spotify.com/password. if you signed up with Facebook, use 'Log in with Facebook' instead",1009,1007
+1009,50003,True,Wed Oct 04 09:10:00 +0000 2017,"@SpotifyCares still nothing, this is useless",,1008
+1010,50004,True,Thu Oct 05 19:45:00 +0000 2017,"@SpotifyCares the new Discover Weekly is all songs I already know, bring back the old algorithm please",1011,
+1011,SpotifyCares,False,Thu Oct 05 20:15:00 +0000 2017,"@50004 thanks for the feedback! the more you skip/save, the more it adapts. we'll pass the note about repeats to the team 🙌",,1010
+1012,50005,True,Fri Oct 06 11:00:00 +0000 2017,"@SpotifyCares Spotify Connect won't find my Sonos speakers since the last update",1013,
+1013,SpotifyCares,False,Fri Oct 06 11:25:00 +0000 2017,"@50005 make sure the phone and speakers are on the same wifi band, then fully close the app and reopen. if Sonos still doesn't show, remove and re-add the Spotify service in the Sonos app",1014,1012
+1014,50005,True,Fri Oct 06 12:00:00 +0000 2017,"@SpotifyCares re-adding the service worked, cheers",,1013
+1015,50006,True,Sat Oct 07 16:30:00 +0000 2017,"@SpotifyCares why is half of Taylor Swift's catalogue greyed out in my library??",1016,
+1016,SpotifyCares,False,Sat Oct 07 17:00:00 +0000 2017,"@50006 licensing for some albums changes by region and over time, which greys tracks out. they usually come back — nothing wrong on your end",,1015
+1017,50007,True,Sun Oct 08 13:15:00 +0000 2017,"@SpotifyCares want to cancel my Premium before the next billing date, how do I do that",1018,
+1018,SpotifyCares,False,Sun Oct 08 13:40:00 +0000 2017,"@50007 you can cancel anytime at spotify.com/account/subscription — you keep Premium until the end of the current cycle, then it drops to free",1019,1017
+1019,50007,True,Sun Oct 08 14:00:00 +0000 2017,"@SpotifyCares got it, thanks",,1018
+1020,50008,True,Mon Oct 09 07:50:00 +0000 2017,"@SpotifyCares family plan says my address doesn't match the plan manager's but we live together",1021,
+1021,SpotifyCares,False,Mon Oct 09 08:20:00 +0000 2017,"@50008 the address just needs to match what the plan manager set, exactly. have them check the spelling/format in Account, then you can re-confirm from the email prompt",,1020
+1022,50009,True,Tue Oct 10 20:10:00 +0000 2017,"@SpotifyCares app crashes every time I open the Search tab on my iPhone",1023,
+1023,SpotifyCares,False,Tue Oct 10 20:35:00 +0000 2017,"@50009 try deleting and reinstalling the app — that rebuilds the local cache that's crashing Search. your playlists are safe on your account",1024,1022
+1024,50009,True,Tue Oct 10 21:15:00 +0000 2017,"@SpotifyCares reinstalching fixed it thanks so much",,1023
+1025,50010,True,Wed Oct 11 10:30:00 +0000 2017,"@SpotifyCares someone is playing music on my account from another country, I think I've been hacked",1026,
+1026,SpotifyCares,False,Wed Oct 11 10:45:00 +0000 2017,"@50010 let's secure it now. go to spotify.com/account and 'Sign out everywhere', then change your password. DM us if anything looks off after that",,1025
+1027,50011,True,Thu Oct 12 15:00:00 +0000 2017,"@SpotifyCares podcast episodes disappear from my downloads after a day",1028,
+1028,SpotifyCares,False,Thu Oct 12 15:30:00 +0000 2017,"@50011 there's a setting under Your Library > Downloads that removes episodes you've finished. turn off 'Remove played downloads' to keep them",1029,1027
+1029,50011,True,Thu Oct 12 16:00:00 +0000 2017,"@SpotifyCares perfect, that was it",,1028
+1030,50012,True,Fri Oct 13 12:20:00 +0000 2017,"@SpotifyCares I'm being charged the full price but I signed up for the student discount",1031,
+1031,SpotifyCares,False,Fri Oct 13 12:50:00 +0000 2017,"@50012 student pricing has to be reverified each year through SheerID. DM us the account email and we'll check where the verification stands",,1030
+1032,50013,True,Sat Oct 14 09:00:00 +0000 2017,"@SpotifyCares shuffle play isn't random, it plays the same 10 songs",1033,
+1033,SpotifyCares,False,Sat Oct 14 09:20:00 +0000 2017,"@50013 shuffle weights tracks you play and skip. playing an album or a bigger playlist end to end for a bit resets the weighting",,1032
+1034,50014,True,Sun Oct 15 18:40:00 +0000 2017,"@SpotifyCares Android Auto shows 'Spotify not responding' since I updated my phone",1035,
+1035,SpotifyCares,False,Sun Oct 15 19:00:00 +0000 2017,"@50014 clear the cache for both Spotify and Android Auto in phone Settings > Apps, then reconnect the cable. that clears the handshake error",1036,1034
+1036,50014,True,Sun Oct 15 19:45:00 +0000 2017,"@SpotifyCares working now, thank you!",,1035
+1037,50015,True,Mon Nov 06 08:15:00 +0000 2017,"@SpotifyCares wrapped is wrong, it says my top artist is someone I never listen to",1038,
+1038,SpotifyCares,False,Mon Nov 06 08:45:00 +0000 2017,"@50015 Wrapped counts a set window and includes background/autoplay. if a family member shares the account that can skew it too",,1037
+1039,50016,True,Tue Nov 07 14:30:00 +0000 2017,"@SpotifyCares I cancelled last month and you charged me again today, I want that money back",1040,
+1040,SpotifyCares,False,Tue Nov 07 14:50:00 +0000 2017,"@50016 that shouldn't happen if the cancel went through. DM us the account email and the date you cancelled and we'll sort the refund",1041,1039
+1041,50016,True,Tue Nov 07 15:20:00 +0000 2017,"@SpotifyCares DM sent",,1040
+1042,50017,True,Wed Nov 08 11:10:00 +0000 2017,"@SpotifyCares songs skip after 10 seconds on my Premium account, wifi is fine",1043,
+1043,SpotifyCares,False,Wed Nov 08 11:35:00 +0000 2017,"@50017 log out, restart the phone, log back in. if it's only certain songs they may be corrupted downloads — delete and re-download them",1044,1042
+1044,50017,True,Wed Nov 08 12:15:00 +0000 2017,"@SpotifyCares logging out and back in did it, thanks",,1043
+1045,50018,True,Thu Nov 09 16:50:00 +0000 2017,"@SpotifyCares can I move my playlists from one account to another? I made a new email",1046,
+1046,SpotifyCares,False,Thu Nov 09 17:15:00 +0000 2017,"@50018 there's no built-in transfer, but you can follow your own playlists from the new account, or use a third-party importer. your username can't be changed though",,1045
+1047,50019,True,Fri Nov 10 09:30:00 +0000 2017,"@SpotifyCares the Premium price went up and nobody told me, this is a joke",1048,
+1048,SpotifyCares,False,Fri Nov 10 10:00:00 +0000 2017,"@50019 sorry for the surprise — price changes are emailed in advance to the account address. DM us the email and we'll confirm what changed and your options",,1047
+1049,50020,True,Sat Nov 11 20:00:00 +0000 2017,"@SpotifyCares Alexa says 'account not linked' even though I just linked it in the app",1050,
+1050,SpotifyCares,False,Sat Nov 11 20:20:00 +0000 2017,"@50020 unlink Spotify in the Alexa app, then relink and set it as the default music service. the first link often doesn't stick",1051,1049
+1051,50020,True,Sat Nov 11 21:00:00 +0000 2017,"@SpotifyCares that worked, appreciate it",,1050
+1052,50021,True,Sun Nov 12 10:15:00 +0000 2017,"@SpotifyCares why can't I download more than 10000 songs offline, I have space",1053,
+1053,SpotifyCares,False,Sun Nov 12 10:40:00 +0000 2017,"@50021 10,000 tracks per device across up to 5 devices is the current offline limit. it's a licensing cap, not a storage one",,1052
+1054,50022,True,Mon Nov 13 13:00:00 +0000 2017,"@SpotifyCares my kid is on our family plan but keeps getting logged out",1055,
+1055,SpotifyCares,False,Mon Nov 13 13:30:00 +0000 2017,"@50022 that usually means the same login is being used on two phones. each family member needs their own Spotify login under the plan",1056,1054
+1056,50022,True,Mon Nov 13 14:00:00 +0000 2017,"@SpotifyCares ah that makes sense, thanks",,1055
+1057,50023,True,Fri Dec 01 08:45:00 +0000 2017,"@SpotifyCares no sound from Spotify on my PS4 but YouTube works fine",1058,
+1058,SpotifyCares,False,Fri Dec 01 09:10:00 +0000 2017,"@50023 close the app fully on the PS4 (not just back to the dashboard) and reopen. if still silent, check the PS4 audio output is set to the same device",1059,1057
+1059,50023,True,Fri Dec 01 09:50:00 +0000 2017,"@SpotifyCares sorted, thanks",,1058
+1060,50024,True,Sat Dec 02 17:30:00 +0000 2017,"@SpotifyCares I want a refund AND I'm cancelling, your service has been broken for a week and support is ignoring me",1061,
+1061,SpotifyCares,False,Sat Dec 02 18:00:00 +0000 2017,"@50024 that's a bad experience and we want to make it right. DM us the account email and a summary of the week's issues and we'll review a refund",,1060
+1062,50025,True,Sun Dec 03 12:00:00 +0000 2017,"@SpotifyCares lyrics feature vanished from all my songs today",1063,
+1063,SpotifyCares,False,Sun Dec 03 12:25:00 +0000 2017,"@50025 lyrics rolled back in a few regions while the provider changes. it should return automatically — nothing to fix on your side",,1062
+1064,50026,True,Mon Dec 04 09:15:00 +0000 2017,"@SpotifyCares how do I stop Spotify opening on startup on my laptop",1065,
+1065,SpotifyCares,False,Mon Dec 04 09:35:00 +0000 2017,"@50026 in the desktop app go Settings > Show Advanced Settings > Startup and window behaviour, and set it to 'Don't open automatically'",,1064
+1066,50027,True,Tue Dec 05 15:40:00 +0000 2017,"@SpotifyCares gift card code says 'already redeemed' but I just bought it",1067,
+1067,SpotifyCares,False,Tue Dec 05 16:00:00 +0000 2017,"@50027 keep the receipt and the card — DM us photos of both and the code, and we'll get it applied or replaced",,1066

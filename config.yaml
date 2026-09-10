@@ -1,0 +1,83 @@
+# TrustAgent configuration. Every non-obvious value here is justified in
+# DECISION_LOG.md. Change `brand` + rerun `make all` to retarget another brand.
+
+brand: SpotifyCares          # chosen after scan_brands (see decision log #1)
+seed: 13
+
+paths:
+  raw_csv: data/raw/twcs.csv
+  sample_csv: data/sample/twcs_sample.csv
+  artifacts: artifacts
+  results: results
+  golden: golden/golden_set.csv
+
+sampling:
+  max_threads: 6000          # subsample cap for a <15 min end-to-end run
+  temporal_split_quantile: 0.80   # train = oldest 80% of threads, test = newest 20%
+  min_customer_chars: 15
+
+intents:
+  # Finalised taxonomy (bootstrapped by clustering, then hand-curated — decision #4).
+  # `risk` drives the escalation policy default.
+  labels:
+    - {name: playback_or_app_bug,        risk: low}
+    - {name: account_access,             risk: high}
+    - {name: billing_subscription,       risk: high}
+    - {name: cancel_or_refund,           risk: high}
+    - {name: family_or_duo_plan,         risk: medium}
+    - {name: content_availability,       risk: low}
+    - {name: device_or_connect,          risk: medium}
+    - {name: feature_request_or_feedback, risk: low}
+    - {name: other,                      risk: medium}
+
+# All defaults are FREE and need only ONE key: GROQ_API_KEY
+#   -> https://console.groq.com/keys  (sign in with Google, no card)
+# Judge A and the drafter are the SAME model on purpose (self-preference probe);
+# Judge B is a different model *family* (Qwen vs OpenAI-oss) for a cross-check.
+# gemini/openai/anthropic providers also work if you set their keys — e.g.
+#   judge_b: {provider: gemini, model: gemini-3.6-flash}
+models:
+  # All on Groq's free tier. Judge A is deliberately the SAME model as the
+  # drafter (self-preference probe); Judge B is a different lineage (allam-2-7b).
+  # Groq free tier: qwen/allam are ~1000 req/MIN; the openai/gpt-oss-* models are
+  # only 1000 req/DAY — avoid them for anything but a one-off. `llm.py` trims
+  # prompts and sets reasoning_effort=none to stay under the 8k tokens/min cap.
+  agent:        {provider: groq, model: qwen/qwen3.8-27b}   # classify + draft
+  weak_labeler: {provider: groq, model: qwen/qwen3.8-27b}   # bulk
+  judge_a:      {provider: groq, model: qwen/qwen3.8-27b}   # SAME model as drafter
+  judge_b:      {provider: groq, model: allam-2-7b}         # different lineage (cross-check)
+  embeddings:   {provider: tfidf}                             # local, free, deterministic
+
+retrieval:
+  k: 4
+  min_similarity: 0.24       # below this we say "no precedent" -> escalate
+
+policy:
+  min_intent_confidence: 0.55
+  min_retrieval_support: 0.30
+  # asymmetric cost: shipping a bad auto-reply is 5x worse than a needless escalation
+  cost_false_autohandle: 5.0
+  cost_false_escalate: 1.0
+  hard_escalate_keywords:
+    - hacked
+    - stolen
+    - fraud
+    - chargeback
+    - lawyer
+    - legal
+    - gdpr
+    - data deletion
+    - delete my account
+    - dispute
+    - unauthorized
+    - suicide
+    - self-harm
+
+judge:
+  quality_accept_threshold: 4   # rubric overall >= 4 (of 5) counts as "acceptable"
+  human_agreement_n: 60         # replies double-rated by a human for judge validation
+  max_rows: 40                  # judged rows per system (bump if your daily Groq quota allows)
+
+eval:
+  bootstrap_iterations: 2000
+  deferral_curve_points: 15

@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.env
+
+# .cache/llm/ IS committed on purpose — it lets reviewers reproduce the exact
+# headline numbers in <15 min with $0 and no API keys. Delete it to re-run live.
+data/raw/*.csv
+data/raw/*.zip
+artifacts/*
+!artifacts/.gitkeep
+.DS_Store
+
+results/_smoke/
+
+# results/ IS committed on purpose — reviewers should see headline numbers
+# without running anything. Regenerate with `make eval`.
