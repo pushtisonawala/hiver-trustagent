@@ -1,6 +1,3 @@
-<!-- Template with unfilled placeholders. Read REPORT_GENERATED.md for the
-     version with real numbers (produced by `make report`). -->
-
 # TrustAgent
 
 I built a small support agent for `@SpotifyCares` and spent most of the time

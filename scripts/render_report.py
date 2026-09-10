@@ -58,6 +58,7 @@ def include(m):
 
 
 src = (ROOT / "REPORT.md").read_text()
+src = re.sub(r"\A<!--.*?-->\s*", "", src, flags=re.S)   # drop the template-only header comment
 src = re.sub(r"<!--\s*INCLUDE:(.+?)\s*-->", include, src)
 src = re.sub(r"\{\{(.+?)\}\}", repl, src)
 
