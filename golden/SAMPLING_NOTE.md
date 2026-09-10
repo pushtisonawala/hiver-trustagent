@@ -8,22 +8,37 @@ on messages its own index has already seen.
 
 **Sampling.** Stratified by (suggested intent × message-length bucket ×
 early/late half of the test period), proportional allocation with a floor of 4
-per intent so rare high-risk intents are not washed out. n = 148.
-Intent distribution of the draw: {'other': 84, 'billing_subscription': 20, 'feature_request_or_feedback': 14, 'account_access': 9, 'playback_or_app_bug': 8, 'cancel_or_refund': 4, 'content_availability': 4, 'family_or_duo_plan': 4, 'device_or_connect': 1}
+per intent so rare high-risk intents are not washed out. **n = 148.**
 
-**Labelling protocol.**
-1. Each row was pre-labelled by the few-shot LLM classifier and a
-   retrieval-grounded draft — shown as *suggestions only*.
-2. The author labelled every row in `--review`, seeing the customer message,
-   the brand's real historical reply, and the top retrieved precedent, and
-   assigned: `gold_intent` (from the 9-label taxonomy), `gold_action`
-   (auto_handle / escalate under the policy in DECISION_LOG #9), and free-text
-   `gold_notes` for anything ambiguous.
-3. Disagreements with the suggestion were kept (not silently accepted) — see
-   `agree_rate` printed at the end of review.
-4. 40 rows (`golden/adjudication_sample.csv`) were relabelled by a
-   second rater; Cohen's κ is reported in `results/metrics.json` via
-   `make judge-validation`-style agreement (see REPORT.md §Evaluation).
+**Final intent distribution:** billing_subscription 30 · feature_request_or_feedback 28
+· other 26 · playback_or_app_bug 23 · content_availability 15 · account_access 14
+· cancel_or_refund 4 · device_or_connect 4 · family_or_duo_plan 4.
+Action: 83 escalate / 65 auto_handle.
+
+**Labelling protocol (two passes).**
+1. Each row was pre-labelled by the few-shot LLM classifier — shown as a
+   *suggestion only*.
+2. **Pass 1 (`scripts/build_golden_set.py --review`):** every row was reviewed
+   against the customer message + the brand's real historical reply + the top
+   retrieved precedent, and `gold_intent` / `gold_action` / free-text
+   `gold_notes` were set. First-pass agreement with the suggestion was ~0.95 on
+   intent — high, because the LLM's guesses were mostly reasonable.
+3. **Pass 2 (`scripts/refine_other.py`):** the first pass left 84/148 rows in
+   the catch-all `other` bucket — the LLM's default when unsure. The definition
+   of `other` is "spam, jokes, unclear, nothing actionable", so any row with a
+   discernible topic was re-examined and moved to its real intent. 58 of the 84
+   were reclassified (billing, feature-feedback, playback, content, account);
+   26 stayed `other` (genuine banter / one-word follow-ups / non-support). Rows
+   touched in pass 2 carry `[2nd pass: reclassified from other]` in `gold_notes`.
+4. `gold_action` follows the policy in DECISION_LOG #9: escalate whenever the
+   issue needs account/email/payment info or is a security/legal matter.
+5. 40 rows (`golden/adjudication_sample.csv`) are set aside for a second rater;
+   Cohen's κ on their labels is the inter-annotator check.
+
+**Known limitation:** the two-pass process means the labels are anchored to one
+person's reading of a 9-way taxonomy the same person designed — see REPORT.md
+§5.4. The `other` → specific reclassification in pass 2 is a judgement call that
+a second rater should stress-test.
 
 **Label definitions.**
 - **playback_or_app_bug** — Songs won't play / skip / cut out, app crashes or freezes, offline downloads broken, audio quality, shuffle behaviour.
