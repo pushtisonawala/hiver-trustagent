@@ -80,7 +80,7 @@ ungrounded draft, account-specific info required, churn sentiment — any hit �
   with the real historical reply and top precedent visible; LLM suggestions
   shown but overridable (and overridden — see `agree_rate` in the note).
   Fields: `gold_intent`, `gold_action`, free-text `gold_notes`.
-- **Second rater:** `??` rows (`adjudication_sample.csv`)
+- **Second rater:** 48 rows (`adjudication_sample.csv`)
   relabelled independently; agreement in `results/metrics.json`.
 - Full protocol: [`golden/SAMPLING_NOTE.md`](golden/SAMPLING_NOTE.md),
   [`golden/labelling_guide.md`](golden/labelling_guide.md).
@@ -97,22 +97,23 @@ ungrounded draft, account-specific info required, churn sentiment — any hit �
 
 ### 3.3 LLM-as-judge + human agreement
 
-Rubric in `judge.py`. **Judge A = allam-2-7b**,
-**Judge B = openai/gpt-oss-120b** (cross-vendor on purpose).
+Rubric in `judge.py`. **Judge A = allam-2-7b** (the
+same model as the drafter — a deliberate self-preference test), **Judge B =
+openai/gpt-oss-120b** (a different model lineage).
 
-Validation (`scripts/judge_validation.py`, n = `??` replies
+Validation (`scripts/judge_validation.py`, n = 48 replies
 rated blind by a human):
 
 | | Judge A | Judge B |
 |---|---|---|
-| Spearman vs human | `??` | `??` |
-| MAE vs human (1–5) | `??` | `??` |
-| within ±1 of human | `??` | `??` |
-| Cohen's κ on "acceptable" | `??` | `??` |
-| judge mean − human mean | `??` | `??` |
+| Spearman vs human | -0.03 | 0.08 |
+| MAE vs human (1–5) | 1.06 | 1.44 |
+| within ±1 of human | 73% | 56% |
+| Cohen's κ on "acceptable" | 0.11 | -0.00 |
+| judge mean − human mean | +0.77 | -0.94 |
 
-Judge-vs-judge: Spearman `??`,
-MAE `??`.
+Judge-vs-judge: Spearman 0.21,
+MAE 1.75.
 
 **Rule I set myself:** if κ on "acceptable" is below ~0.4 for both judges, the
 headline quality number is not allowed to stand without the caveat in §5.
@@ -174,9 +175,24 @@ See `results/deferral_curve.png` for quality-vs-coverage and
 ## 5. What is misleading about my headline number
 
 Take the headline as *"the agent's mean judged reply quality is
-4.83/5 and it safely
-automates 37% of
+4.83/5 (Judge A) and it
+safely automates 37% of
 traffic."* Here is why you should not believe it as stated.
+
+0. **The judges do not agree with a human — so the quality number is barely
+   measuring quality.** I validated both against 48 of my
+   own blind human ratings (§3.3). Spearman with the human:
+   **-0.03** (Judge A) and
+   **0.08** (Judge B); Cohen's κ on
+   "acceptable" is 0.11 and
+   -0.00 — essentially zero.
+   Judge A runs +0.77
+   above my ratings, Judge B -0.94
+   below. **The self-imposed rule (κ < 0.4 ⇒ caveat) fires hard: the reply-quality
+   headline is model-specific bias plus noise, not a trustworthy score.** With
+   these free models I cannot report a defensible automated quality number at all
+   — the honest output is the *intent* and *escalation* metrics plus this
+   admission. This is the single most misleading thing in the report.
 
 1. **The quality number is conditioned on the agent's own routing (selection
    bias).** `mean_overall_auto_only` is measured only on messages the agent
@@ -186,12 +202,13 @@ traffic."* Here is why you should not believe it as stated.
 2. **Judge A is the same model as the drafter.** The agent drafts with
    `allam-2-7b` and Judge A is
    `allam-2-7b` — literally the same weights grading
-   their own output. Self-preference check: A−B on the agent's drafts =
-   +1.33, A−B on the simple
-   baseline's drafts = +1.93.
-   If the first is meaningfully larger, the headline is inflated by a judge that
-   recognises and rewards its own style. **Judge B (Gemini, cross-vendor) is the
-   number I actually stand behind.**
+   their own output, and it scores the agent
+   +1.33 above Judge B
+   (`openai/gpt-oss-120b`, a different lineage). The gap is
+   actually *larger* on the simple baseline
+   (+1.93), so this looks less like
+   targeted self-flattery and more like Judge A being uniformly generous — which
+   point 0 confirms.
 
 3. **"Resolved" is a heuristic, and it is optimistic.** Retrieval grounding
    prefers past replies where the customer said "thanks" or didn't reply again.
@@ -199,11 +216,13 @@ traffic."* Here is why you should not believe it as stated.
    So the evidence pool is biased toward replies that pacified people, not
    necessarily replies that fixed things.
 
-4. **The golden labels were made by the person who designed the taxonomy.**
-   `gold_intent` and the 9-label taxonomy came from the same head. Intent
-   accuracy partly measures "does the classifier think like its author", not
-   "is the taxonomy right". The second-rater κ is the only guard, and it is on
-   `??` rows.
+4. **The golden labels were made by the person who designed the taxonomy, in
+   two passes.** `gold_intent`, the 9-label taxonomy, and the pass-2
+   `other`→specific reclassification (`golden/SAMPLING_NOTE.md`) all came from
+   one head. Intent accuracy partly measures "does the classifier think like its
+   author", not "is the taxonomy right". A 40-row adjudication sample is set
+   aside for a second rater (`golden/adjudication_sample.csv`) but that
+   inter-annotator κ has not been collected yet — it is the missing guard.
 
 5. **No distribution shift is tested.** Train and test are both Oct–Dec 2017,
    same product, same support team. Real deployment faces new features, new bug
@@ -231,10 +250,13 @@ traffic."* Here is why you should not believe it as stated.
     code-switched messages (present in the raw data) are under-sampled in the
     golden set and the judge is weakest there.
 
-**What would make me trust it:** Judge B (cross-vendor) as the headline, quoted
-*with* its CI, *at a fixed coverage* from the deferral curve, with
+**What would make me trust it:** a judge that actually passes human validation
+(κ > 0.6) — likely a frontier model, or an ensemble with a rationale audit —
+quoted *with* its CI, *at a fixed coverage* from the deferral curve, with
 `unsafe_auto_rate` on the high-risk intents reported separately and required to
-be ~0, plus a fresh 100-message sample from a *later* time slice.
+be ~0, plus a fresh 100-message sample from a *later* time slice. Until then the
+intent and escalation numbers carry the report; the quality number is a
+directional signal at best.
 
 ---
 

@@ -97,8 +97,9 @@ ungrounded draft, account-specific info required, churn sentiment — any hit �
 
 ### 3.3 LLM-as-judge + human agreement
 
-Rubric in `judge.py`. **Judge A = {{ judge_cross_vendor.judge_a_model }}**,
-**Judge B = {{ judge_cross_vendor.judge_b_model }}** (cross-vendor on purpose).
+Rubric in `judge.py`. **Judge A = {{ judge_cross_vendor.judge_a_model }}** (the
+same model as the drafter — a deliberate self-preference test), **Judge B =
+{{ judge_cross_vendor.judge_b_model }}** (a different model lineage).
 
 Validation (`scripts/judge_validation.py`, n = {{ judge_validation.n }} replies
 rated blind by a human):
@@ -156,9 +157,24 @@ See `results/deferral_curve.png` for quality-vs-coverage and
 ## 5. What is misleading about my headline number
 
 Take the headline as *"the agent's mean judged reply quality is
-{{ models.agent.quality_judge_a.mean_overall_all | .2f }}/5 and it safely
-automates {{ models.agent.quality_judge_a.safe_automation_rate | .0% }} of
+{{ models.agent.quality_judge_a.mean_overall_all | .2f }}/5 (Judge A) and it
+safely automates {{ models.agent.quality_judge_a.safe_automation_rate | .0% }} of
 traffic."* Here is why you should not believe it as stated.
+
+0. **The judges do not agree with a human — so the quality number is barely
+   measuring quality.** I validated both against {{ judge_validation.n }} of my
+   own blind human ratings (§3.3). Spearman with the human:
+   **{{ judge_validation.judge_a.spearman | .2f }}** (Judge A) and
+   **{{ judge_validation.judge_b.spearman | .2f }}** (Judge B); Cohen's κ on
+   "acceptable" is {{ judge_validation.judge_a.cohen_kappa_accept | .2f }} and
+   {{ judge_validation.judge_b.cohen_kappa_accept | .2f }} — essentially zero.
+   Judge A runs {{ judge_validation.judge_a.judge_mean_minus_human_mean | +.2f }}
+   above my ratings, Judge B {{ judge_validation.judge_b.judge_mean_minus_human_mean | +.2f }}
+   below. **The self-imposed rule (κ < 0.4 ⇒ caveat) fires hard: the reply-quality
+   headline is model-specific bias plus noise, not a trustworthy score.** With
+   these free models I cannot report a defensible automated quality number at all
+   — the honest output is the *intent* and *escalation* metrics plus this
+   admission. This is the single most misleading thing in the report.
 
 1. **The quality number is conditioned on the agent's own routing (selection
    bias).** `mean_overall_auto_only` is measured only on messages the agent
@@ -168,12 +184,13 @@ traffic."* Here is why you should not believe it as stated.
 2. **Judge A is the same model as the drafter.** The agent drafts with
    `{{ judge_cross_vendor.agent_drafts_by_ }}` and Judge A is
    `{{ judge_cross_vendor.judge_a_model }}` — literally the same weights grading
-   their own output. Self-preference check: A−B on the agent's drafts =
-   {{ judge_cross_vendor.A_minus_B_on_agent | +.2f }}, A−B on the simple
-   baseline's drafts = {{ judge_cross_vendor.A_minus_B_on_simple | +.2f }}.
-   If the first is meaningfully larger, the headline is inflated by a judge that
-   recognises and rewards its own style. **Judge B (Gemini, cross-vendor) is the
-   number I actually stand behind.**
+   their own output, and it scores the agent
+   {{ judge_cross_vendor.A_minus_B_on_agent | +.2f }} above Judge B
+   (`{{ judge_cross_vendor.judge_b_model }}`, a different lineage). The gap is
+   actually *larger* on the simple baseline
+   ({{ judge_cross_vendor.A_minus_B_on_simple | +.2f }}), so this looks less like
+   targeted self-flattery and more like Judge A being uniformly generous — which
+   point 0 confirms.
 
 3. **"Resolved" is a heuristic, and it is optimistic.** Retrieval grounding
    prefers past replies where the customer said "thanks" or didn't reply again.
@@ -181,11 +198,13 @@ traffic."* Here is why you should not believe it as stated.
    So the evidence pool is biased toward replies that pacified people, not
    necessarily replies that fixed things.
 
-4. **The golden labels were made by the person who designed the taxonomy.**
-   `gold_intent` and the 9-label taxonomy came from the same head. Intent
-   accuracy partly measures "does the classifier think like its author", not
-   "is the taxonomy right". The second-rater κ is the only guard, and it is on
-   {{ judge_validation.n }} rows.
+4. **The golden labels were made by the person who designed the taxonomy, in
+   two passes.** `gold_intent`, the 9-label taxonomy, and the pass-2
+   `other`→specific reclassification (`golden/SAMPLING_NOTE.md`) all came from
+   one head. Intent accuracy partly measures "does the classifier think like its
+   author", not "is the taxonomy right". A 40-row adjudication sample is set
+   aside for a second rater (`golden/adjudication_sample.csv`) but that
+   inter-annotator κ has not been collected yet — it is the missing guard.
 
 5. **No distribution shift is tested.** Train and test are both Oct–Dec 2017,
    same product, same support team. Real deployment faces new features, new bug
@@ -213,10 +232,13 @@ traffic."* Here is why you should not believe it as stated.
     code-switched messages (present in the raw data) are under-sampled in the
     golden set and the judge is weakest there.
 
-**What would make me trust it:** Judge B (cross-vendor) as the headline, quoted
-*with* its CI, *at a fixed coverage* from the deferral curve, with
+**What would make me trust it:** a judge that actually passes human validation
+(κ > 0.6) — likely a frontier model, or an ensemble with a rationale audit —
+quoted *with* its CI, *at a fixed coverage* from the deferral curve, with
 `unsafe_auto_rate` on the high-risk intents reported separately and required to
-be ~0, plus a fresh 100-message sample from a *later* time slice.
+be ~0, plus a fresh 100-message sample from a *later* time slice. Until then the
+intent and escalation numbers carry the report; the quality number is a
+directional signal at best.
 
 ---
 

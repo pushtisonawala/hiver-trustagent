@@ -928,5 +928,35 @@
     "A_minus_B_on_agent": 1.333333333333333,
     "note": "Agent drafts are written by the same vendor as Judge A. A positive A_minus_B_on_agent that is larger than A_minus_B_on_simple is a self-preference red flag.",
     "A_minus_B_on_simple": 1.9333333333333336
+  },
+  "judge_validation": {
+    "n": 48,
+    "judge_a": {
+      "model": "allam-2-7b",
+      "n": 48,
+      "spearman": -0.02830083304343062,
+      "pearson": 0.19424969284291604,
+      "mae": 1.0625,
+      "within_1": 0.7291666666666666,
+      "cohen_kappa_accept": 0.1063829787234043,
+      "judge_mean_minus_human_mean": 0.7708333333333335
+    },
+    "judge_b": {
+      "model": "openai/gpt-oss-120b",
+      "n": 48,
+      "spearman": 0.08106244475390198,
+      "pearson": 0.1624923771347893,
+      "mae": 1.4375,
+      "within_1": 0.5625,
+      "cohen_kappa_accept": -0.003095975232198178,
+      "judge_mean_minus_human_mean": -0.9375
+    },
+    "judge_a_vs_judge_b": {
+      "spearman": 0.2142180461950229,
+      "mae": 1.75,
+      "mean_a": 4.6875,
+      "mean_b": 2.9791666666666665
+    },
+    "interpretation": "Use judge_a/judge_b spearman + cohen_kappa_accept to decide how much weight the headline judge number can carry. If kappa < ~0.4 the judge is not a reliable stand-in for a human and the headline must be caveated."
   }
 }
