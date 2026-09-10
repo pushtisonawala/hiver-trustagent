@@ -216,11 +216,10 @@ def _write_results_md(out: dict, res: Path):
         )
     if "judge_cross_vendor" in out:
         cv = out["judge_cross_vendor"]
-        L += ["\n**Judge A vs Judge B on the agent's replies:** "
-              f"{cv['judge_a_model']} gives {cv['A_scores_agent']:.2f}, "
-              f"{cv['judge_b_model']} gives {cv['B_scores_agent']:.2f} "
-              f"(gap {cv['A_minus_B_on_agent']:+.2f}; on the simple baseline the gap is "
-              f"{cv['A_minus_B_on_simple']:+.2f}). Neither passes the human check in §3.3."]
+        L += [f"\nOn the agent's replies, {cv['judge_a_model']} averages "
+              f"{cv['A_scores_agent']:.2f} and {cv['judge_b_model']} averages "
+              f"{cv['B_scores_agent']:.2f} (gap {cv['A_minus_B_on_agent']:+.2f}; "
+              f"the gap on the simple baseline is {cv['A_minus_B_on_simple']:+.2f})."]
     (res / "RESULTS.md").write_text("\n".join(L) + "\n")
 
 

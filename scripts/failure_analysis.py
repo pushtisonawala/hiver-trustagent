@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-"""Cluster the agent's worst cases into failure modes with real examples.
+"""Group the agent's worst cases into failure modes with real examples.
 
-Reads results/failure_pool.csv (worst 40 by combined judge score, written by
-`make eval`), tags each with a failure mode, and writes a ranked
-results/failure_analysis.md. The hypotheses are seeded but you are expected to
-sharpen them — the assignment wants *your* reasoning, not the tool's.
+Reads results/failure_pool.csv (written by `make eval`), tags each row with a
+mode, and writes results/failure_analysis.md. My analysis of each mode lives in
+results/failure_notes.md, keyed by mode name; this script only pulls it in, so
+regenerating the analysis never overwrites what I wrote. If a note is missing it
+falls back to a one-line stub.
 """
 from __future__ import annotations
 
@@ -84,26 +85,47 @@ def main():
     df["mode"] = [tag(r, cfg) for _, r in df.iterrows()]
     counts = Counter(df["mode"])
 
-    out = ["# Failure analysis — agent\n",
-           f"Pool = {len(df)} worst-scoring golden cases (by combined Judge A+B overall).\n",
-           "| rank | failure mode | count | share |", "|---|---|---|---|"]
+    notes = _load_notes(res, [m for m, _ in counts.most_common()])
+
     top = counts.most_common(5)
-    for i, (mode, n) in enumerate(top, 1):
-        out.append(f"| {i} | `{mode}` | {n} | {n/len(df):.0%} |")
-
-    for i, (mode, n) in enumerate(top, 1):
+    out = [f"Worst {len(df)} of the golden set by combined judge score, grouped. "
+           f"Counts are how many of those {len(df)} fell in each mode.\n"]
+    for mode, n in top:
         ex = df[df["mode"] == mode].head(2)
-        out += [f"\n## {i}. `{mode}` — {MODES[mode]}  ({n} cases)\n"]
+        out += [f"### {mode} ({n})\n", f"{MODES[mode]}\n"]
         for _, r in ex.iterrows():
-            out += [f"> **customer:** {r['customer_text']}",
-                    f"> **agent ({r['intent']}, {r['action']}):** {r['draft_reply']}",
-                    f"> **gold:** intent={r['gold_intent']} action={r['gold_action']}  "
-                    f"· judgeA={r['judge_a_overall']}\n"]
-        out += [f"**Seed hypothesis.** {SEED_HYPOTHESIS[mode]}\n",
-                "**Author note.** _<add your sharper hypothesis + what you actually saw here>_\n"]
+            out += [f"> customer: {r['customer_text']}",
+                    f"> agent ({r['intent']}, {r['action']}): {r['draft_reply']}",
+                    f"> gold: {r['gold_intent']} / {r['gold_action']}  (judge A {r['judge_a_overall']})\n"]
+        out += [notes.get(mode, SEED_HYPOTHESIS[mode]), ""]
 
-    (res / "failure_analysis.md").write_text("\n".join(out) + "\n")
+    (res / "failure_analysis.md").write_text("\n".join(out).rstrip() + "\n")
     print("wrote", res / "failure_analysis.md")
+
+
+def _load_notes(res: Path, modes: list[str]) -> dict:
+    """results/failure_notes.md: `## <mode>` headers, prose under each."""
+    fp = res / "failure_notes.md"
+    if not fp.exists():
+        stub = ["# Failure-mode notes",
+                "",
+                "One paragraph per mode. Edit these; `make failures` reads them and won't",
+                "overwrite them.", ""]
+        for m in modes:
+            stub += [f"## {m}", "", SEED_HYPOTHESIS.get(m, ""), ""]
+        fp.write_text("\n".join(stub))
+        return {}
+    out, cur, buf = {}, None, []
+    for line in fp.read_text().splitlines():
+        if line.startswith("## "):
+            if cur:
+                out[cur] = "\n".join(buf).strip()
+            cur, buf = line[3:].strip(), []
+        elif cur is not None:
+            buf.append(line)
+    if cur:
+        out[cur] = "\n".join(buf).strip()
+    return {k: v for k, v in out.items() if v}
 
 
 if __name__ == "__main__":
