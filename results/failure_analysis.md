@@ -22,7 +22,7 @@ Pool = 30 worst-scoring golden cases (by combined Judge A+B overall).
 
 **Seed hypothesis.** We evaluate on the first message only. Fix: feed the last 3 turns as context.
 
-**Author note.** _<add your sharper hypothesis + what you actually saw here>_
+**Author note.** The real problem is not just missing context, it is that the agent never *notices* it is replying to a fragment, so it confabulates a confident first turn (asking about "syncing local files" to someone who said "I can't do anything but listen to my playlists"). Both examples are clearly turn 2+ of a thread. A cheap fix ahead of full multi-turn: a binary "standalone message vs reply-fragment" check, and route fragments straight to escalate. Note the judgeA=5 on both, the same-model judge rewards fluent nonsense, which is why these only surfaced via the combined A+B ranking.
 
 
 ## 2. `generic_nonanswer` — Vague 'we're looking into it' / 'DM us' with no actual help.  (8 cases)
@@ -37,7 +37,7 @@ Pool = 30 worst-scoring golden cases (by combined Judge A+B overall).
 
 **Seed hypothesis.** Model hedges when evidence is thin instead of escalating. Fix: forbid 'DM us' as a *reply* — that path must escalate.
 
-**Author note.** _<add your sharper hypothesis + what you actually saw here>_
+**Author note.** The drafter falls back to corporate filler ("we'll let the right team know", "give us a shout") whenever the retrieved evidence lacks a crisp fix, and because allam-2-7b is small, that filler register is its default. The gate then auto-handles these because the drafter self-reported grounded=true. Fix: stop trusting the drafter's own flag, check externally whether the reply contains a concrete instruction or fact, and if not, escalate. The Rain On Me case actually has a real answer (album licensing differs by market); the agent just does not know it and will not admit that.
 
 
 ## 3. `retrieval_irrelevant` — Top precedent was not actually similar; grounding is spurious.  (3 cases)
@@ -52,7 +52,7 @@ Pool = 30 worst-scoring golden cases (by combined Judge A+B overall).
 
 **Seed hypothesis.** TF-IDF/embedding retrieves lexically-close but semantically-different cases. Fix: re-rank top-20 with the LLM; drop hits it flags as off-topic.
 
-**Author note.** _<add your sharper hypothesis + what you actually saw here>_
+**Author note.** TF-IDF matches on shared surface words ("song", "library", "download") rather than on what the customer needs, and it has no concept of "already tried". In the second example the customer explicitly lists reinstall + cache-clear + re-download, and the agent still replies "please DM us" because the retrieved precedent was a generic escalation template. Two-part fix: (a) embedding retrieval plus an LLM re-rank that drops off-topic hits, and (b) parse the "already tried X" steps out of the message and down-weight precedents that only re-suggest them.
 
 
 ## 4. `tone_off` — Correct content but off-brand: robotic, preachy, or too long.  (3 cases)
@@ -67,7 +67,7 @@ Pool = 30 worst-scoring golden cases (by combined Judge A+B overall).
 
 **Seed hypothesis.** Voice guide not enforced. Fix: add 2 golden style exemplars + a length cap.
 
-**Author note.** _<add your sharper hypothesis + what you actually saw here>_
+**Author note.** allam-2-7b does not reliably obey the voice spec ("1-3 sentences, lowercase ok, <=1 emoji") even with it in the system prompt, the web-player reply is a 45-word macro ending "kindly provide us with the browser you're using and its version". This is a model-capability ceiling, not a prompt bug: a 7B model in JSON mode will not hold style constraints. Real fixes are a stronger drafter or a cheap post-edit pass that rewrites to the house voice; prompt tweaking will not close it.
 
 
 ## 5. `intent_confusion` — Wrong intent, which then routed the whole response wrong.  (1 cases)
@@ -78,5 +78,5 @@ Pool = 30 worst-scoring golden cases (by combined Judge A+B overall).
 
 **Seed hypothesis.** Adjacent labels (billing vs cancel; playback vs device) leak. Fix: merge or add contrastive few-shot examples for the confused pair.
 
-**Author note.** _<add your sharper hypothesis + what you actually saw here>_
+**Author note.** Two bugs stacked. (a) The playful UI-math nitpick (emoji, ";)", no explicit ask) reads as unclear to the classifier, so it lands in `other` and gets escalated instead of logged as feature feedback. (b) The drafter serialised its own control fields into the customer-facing text: "Grounded: True, Missing Info: None" appears in the reply. Fix (a): add feature-feedback few-shot examples with sarcasm/emoji. Fix (b): strict JSON parsing plus a guard that rejects any reply containing "Grounded:" or "Missing Info:".
 
