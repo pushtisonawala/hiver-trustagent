@@ -1,12 +1,12 @@
 # TrustAgent
 
-I built a small support agent for `@SpotifyCares` and spent most of the time
-trying to figure out whether it actually works. It mostly doesn't, in ways that
-took a real evaluation to see, which is the interesting part.
+A support agent for `@SpotifyCares`. It takes one incoming tweet, picks an
+intent, drafts a reply from retrieved past cases, and decides whether to
+auto-handle it or escalate. Most of my time went on the evaluation and it wasn't
+flattering: the agent works on the easy third of traffic and I couldn't get a
+trustworthy quality number out of the free models at all.
 
-Given one incoming tweet the agent picks an intent, drafts a reply from
-retrieved past cases, and decides whether to auto-handle it or send it to a
-human. Numbers in this doc come straight out of `results/metrics.json`.
+Numbers here are pulled from `results/metrics.json` by `scripts/render_report.py`.
 
 ## Picking the brand and the goal
 
@@ -118,7 +118,7 @@ The bootstrap CI on agent quality is 4.90  (95% CI 4.77–5.00), and intent cali
 
 The headline reads roughly "4.90/5 reply quality, 37% safely automated". A few reasons not to take that at face value.
 
-The big one is that the judges don't agree with me. Judge A's Spearman correlation against my 48 ratings is -0.03 and Judge B's is 0.08, and both κ are near zero. On average Judge A scores +0.77 higher than me and Judge B -0.94 lower. So with these free models I can't put a defensible number on reply quality at all. The intent and escalation metrics are what carry this report. The quality score is a direction, not a measurement, and I'm glad I built the validation harness to find that out rather than just quoting the number.
+First, the judges don't agree with me. Judge A's Spearman correlation against my 48 ratings is -0.03 and Judge B's is 0.08, both κ near zero. On average Judge A scores +0.77 higher than me and Judge B -0.94 lower. So the quality number isn't really measuring quality with these models. The intent and escalation metrics are what the report rests on; the quality score is a direction at best.
 
 That quality number is also only measured on the messages the agent chose to
 answer, which are the easy ones, so it's not what you'd see on a random tweet.
