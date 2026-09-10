@@ -1,1 +1,0 @@
-{"payload": {"provider": "gemini", "model": "gemini-3-flash-preview", "system": "classifier", "user": "Return JSON {\"a\":1}", "max_tokens": 200, "json_mode": true, "temperature": 0.0}, "response": "{\n  \"a\": 1\n}"}

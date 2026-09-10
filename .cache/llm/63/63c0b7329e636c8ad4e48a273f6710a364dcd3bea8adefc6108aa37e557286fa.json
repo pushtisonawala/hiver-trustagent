@@ -1,1 +1,0 @@
-{"payload": {"provider": "groq", "model": "openai/gpt-oss-20b", "system": "Classify. JSON {\"intent\":\"x\",\"confidence\":0.5}", "user": "alexa not working", "max_tokens": 900, "json_mode": true, "temperature": 0.0}, "response": "{\"intent\":\"alexa_not_working\",\"confidence\":0.9}"}

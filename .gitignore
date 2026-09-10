@@ -16,3 +16,4 @@ results/_smoke/
 
 # results/ IS committed on purpose — reviewers should see headline numbers
 # without running anything. Regenerate with `make eval`.
+.cache/

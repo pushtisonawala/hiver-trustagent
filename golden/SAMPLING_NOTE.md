@@ -8,8 +8,8 @@ on messages its own index has already seen.
 
 **Sampling.** Stratified by (suggested intent × message-length bucket ×
 early/late half of the test period), proportional allocation with a floor of 4
-per intent so rare high-risk intents are not washed out. n = 60.
-Intent distribution of the draw: {'billing_subscription': 10, 'feature_request_or_feedback': 10, 'playback_or_app_bug': 9, 'other': 8, 'account_access': 6, 'content_availability': 5, 'device_or_connect': 4, 'cancel_or_refund': 4, 'family_or_duo_plan': 4}
+per intent so rare high-risk intents are not washed out. n = 148.
+Intent distribution of the draw: {'other': 84, 'billing_subscription': 20, 'feature_request_or_feedback': 14, 'account_access': 9, 'playback_or_app_bug': 8, 'cancel_or_refund': 4, 'content_availability': 4, 'family_or_duo_plan': 4, 'device_or_connect': 1}
 
 **Labelling protocol.**
 1. Each row was pre-labelled by the few-shot LLM classifier and a

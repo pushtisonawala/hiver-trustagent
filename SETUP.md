@@ -138,4 +138,4 @@ Commit `golden/golden_set.csv`. Re-run `make all`.
 | `kaggle: command not found` | `.venv/bin/pip install kaggle` (the Makefile does this automatically) |
 | first live run is slow | free-tier rate limits (~30/min). It's working — leave it. Re-runs hit the cache and finish in minutes. |
 | `RateLimitError` / 429 spam | expected on free tiers; the client backs off and retries. If it stalls for good, just re-run — finished calls are cached. |
-| want the fast path | don't set keys / keep `.cache/llm` — `make all` replays the committed cache in <5 min for $0 |
+| want the fast path | don't set a key — `make all` unpacks `llm-cache.tgz` and replays it in <5 min for $0 |

@@ -6,11 +6,14 @@ help: ## Show this help
 
 UV := $(shell command -v uv 2>/dev/null || echo $(HOME)/.local/bin/uv)
 
-setup: ## Create the venv (Python 3.12 via uv) and install dependencies
+setup: restore-cache ## Create the venv (Python 3.12 via uv) and install dependencies
 	@test -x "$(UV)" || curl -LsSf https://astral.sh/uv/install.sh | sh
 	"$(UV)" venv --python 3.12 .venv
 	"$(UV)" pip install -e . pytest
-	@echo "OK. Now: cp .env.example .env and add your free GROQ + GEMINI keys."
+	@echo "OK. Now (optional): cp .env.example .env and add your free GROQ_API_KEY."
+
+restore-cache: ## Unpack the committed LLM response cache so `make all` runs offline
+	@test -d .cache/llm || (test -f llm-cache.tgz && tar -xzf llm-cache.tgz && echo "restored .cache/llm from llm-cache.tgz") || true
 
 data: ## Download the Kaggle dataset into data/raw/ (needs Kaggle creds)
 	bash scripts/download_data.sh
@@ -48,12 +51,15 @@ report: ## Fill REPORT.md placeholders from results/metrics.json -> REPORT_GENER
 demo: ## Interactive: type a customer message, see intent + evidence + draft + decision
 	$(PY) -m trustagent.cli demo
 
-all: build eval failures report ## Reproduce the headline results (target: <15 min)
+all: restore-cache build eval failures report ## Reproduce the headline results (target: <15 min)
 
 test: ## Unit tests
 	$(PY) -m pytest -q tests/
 
+bundle-cache: ## Repack .cache/llm into llm-cache.tgz (do this before committing a fresh run)
+	tar -czf llm-cache.tgz .cache && echo "wrote llm-cache.tgz ($$(du -h llm-cache.tgz | cut -f1))"
+
 clean:
 	rm -rf artifacts/* results/*.json results/*.png results/*.md .cache
 
-.PHONY: help setup data scan-brands smoke build golden provisional-golden eval judge-validation failures report demo all test clean
+.PHONY: help setup restore-cache bundle-cache data scan-brands smoke build golden provisional-golden eval judge-validation failures report demo all test clean

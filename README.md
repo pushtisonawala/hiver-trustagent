@@ -40,7 +40,7 @@ so a reviewer reproduces the exact numbers with **no key at all**:
 make setup                       # venv + deps                            (~3 min)
 make data                        # Kaggle download -> data/raw/twcs.csv    (~3 min)
 make all                         # build (fresh) + eval/failures/report replayed from
-                                 # the committed .cache/llm/ -> results/   (~6 min, $0, no keys)
+                                 # replayed from llm-cache.tgz -> results/  (~6 min, $0, no keys)
 open REPORT_GENERATED.md results/RESULTS.md results/*.png
 ```
 
@@ -48,7 +48,7 @@ To regenerate against the live APIs (also free):
 
 ```bash
 cp .env.example .env && $EDITOR .env    # just GROQ_API_KEY (1 min, free, no card)
-rm -rf .cache/llm                       # drop the cache
+rm -rf .cache/llm                       # drop the cache (llm-cache.tgz stays as backup)
 make build
 make provisional-golden && make all     # first run ~15-20 min (free-tier rate limits), then cached
 python scripts/build_golden_set.py --review   # you hand-label ~200 rows (~45 min)
@@ -130,7 +130,8 @@ results/          committed so reviewers see numbers without running anything
 - **Judge validated against humans** — Spearman + Cohen's κ before the judge
   number is allowed to carry any weight.
 - **Everything cached + seeded, cache committed** — reviewers reproduce the exact
-  numbers with $0 and no keys; `rm -rf .cache/llm` to re-run live.
+  numbers with $0 and no keys (`make setup`/`make all` unpack `llm-cache.tgz`);
+  `rm -rf .cache/llm` + a `GROQ_API_KEY` to re-run live.
 
 ## Provenance
 

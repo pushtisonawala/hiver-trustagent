@@ -19,13 +19,13 @@
 2. `cp .env.example .env` → add **GROQ_API_KEY** (free, no card, ~1 min)
 3. `make build`
 4. `python scripts/build_golden_set.py --review`  → label ~200 rows → commit `golden/golden_set.csv`
-5. `make all`  → first run ~15-20 min (free-tier limits). This also **populates
-   `.cache/llm/`** — commit it. That's what lets reviewers reproduce your exact
+5. `make all`  → first run ~15-20 min (free-tier limits). Then `make bundle-cache`
+   to repack `llm-cache.tgz` — that's what lets reviewers reproduce your exact
    numbers for $0 with no keys.
 6. `python scripts/judge_validation.py --make-sheet` → rate 60 replies → save as
    `golden/human_reply_ratings.csv` → `make judge-validation`
-7. `make report` again (picks up judge-validation numbers) → **commit `results/`,
-   `.cache/llm/`, `REPORT_GENERATED.md`**
+7. `make report` again (picks up judge-validation numbers) → `make bundle-cache` →
+   **commit `results/`, `llm-cache.tgz`, `REPORT_GENERATED.md`**
 8. Fill the "Author note" lines in `results/failure_analysis.md` — reviewers
    explicitly want *your* hypotheses, not the tool's seed text.
 9. `git add -A && git commit && git push`; paste the repo link + the contents of

@@ -1,1 +1,0 @@
-{"payload": {"provider": "groq", "model": "openai/gpt-oss-20b", "system": "Classify. JSON {\"intent\":\"x\",\"confidence\":0.5}", "user": "charged twice", "max_tokens": 900, "json_mode": true, "temperature": 0.0}, "response": "{\"intent\":\"charged_twice\",\"confidence\":0.92}"}

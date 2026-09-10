@@ -98,7 +98,9 @@ reference from REPORT.md.
 15. **Every LLM call cached by input-hash, seeded (seed=13), and the cache is
     committed to the repo.** A reviewer runs `make all` and reproduces the exact
     headline numbers in minutes with **no API keys and $0** — the cache replays.
-    `rm -rf .cache/llm` re-runs against the live free APIs. Cost: editing a
+    It's committed as a single `llm-cache.tgz` (596 KB) that `make setup` /
+    `make all` unpack; `make bundle-cache` repacks it after a fresh run.
+    `rm -rf .cache/llm` + a key re-runs against the live free APIs. Cost: editing a
     prompt or `config.yaml` silently misses the cache (documented in README).
 
 16. **Subsample cap = 6000 threads.** Enough for stable retrieval + metrics,
