@@ -1,5 +1,5 @@
-<!-- This file has `??` placeholders. The filled version with real numbers is
-     REPORT_GENERATED.md (run `make report` to regenerate it). -->
+<!-- Template with unfilled placeholders. Read REPORT_GENERATED.md for the
+     version with real numbers (produced by `make report`). -->
 
 # TrustAgent
 
