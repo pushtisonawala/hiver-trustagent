@@ -26,7 +26,7 @@ from trustagent.judge import _judge_one
 from trustagent.metrics import judge_agreement
 from trustagent.retrieval import Retriever
 
-N = 60
+N = 50
 
 
 def make_sheet(cfg):
@@ -50,10 +50,43 @@ def make_sheet(cfg):
           f"save as golden/human_reply_ratings.csv")
 
 
+def rate(cfg):
+    """Interactive terminal rater — no spreadsheet needed."""
+    todo = Path("golden/human_reply_ratings.todo.csv")
+    out = Path("golden/human_reply_ratings.csv")
+    if not todo.exists():
+        make_sheet(cfg)
+    d = pd.read_csv(todo, dtype=str).fillna("")
+    if out.exists():
+        done = pd.read_csv(out, dtype=str).fillna("")
+        rated = set(zip(done["reply"]))
+        d = d[~d["reply"].isin({r[0] for r in rated})]
+        rows = done.to_dict("records")
+    else:
+        rows = []
+    print(f"{len(d)} replies to rate.  For each: overall 1-5, then acceptable y/n.  q = save & quit\n")
+    for _, r in d.iterrows():
+        print("=" * 88)
+        print(f"CUSTOMER: {r['customer_text']}")
+        print(f"REPLY:    {r['reply']}")
+        o = input("  overall 1-5 > ").strip()
+        if o.lower() == "q":
+            break
+        if o not in {"1", "2", "3", "4", "5"}:
+            print("  (skipped — not 1-5)")
+            continue
+        a = input("  acceptable? y/n > ").strip().lower()
+        rows.append({"customer_text": r["customer_text"], "reply": r["reply"],
+                     "human_overall": o, "human_acceptable": "1" if a.startswith("y") else "0"})
+    pd.DataFrame(rows).to_csv(out, index=False)
+    print(f"\nsaved {len(rows)} ratings -> {out}.  Now run:  make judge-validation")
+
+
 def run(cfg):
     hp = Path("golden/human_reply_ratings.csv")
     if not hp.exists():
-        raise SystemExit("golden/human_reply_ratings.csv not found — run --make-sheet first.")
+        raise SystemExit("golden/human_reply_ratings.csv not found — run:  "
+                         ".venv/bin/python scripts/judge_validation.py --rate")
     h = pd.read_csv(hp)
     h = h[pd.to_numeric(h["human_overall"], errors="coerce").notna()].reset_index(drop=True)
     h["human_overall"] = h["human_overall"].astype(float)
@@ -96,7 +129,13 @@ def run(cfg):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--make-sheet", action="store_true")
+    ap.add_argument("--make-sheet", action="store_true", help="write the blank rating sheet")
+    ap.add_argument("--rate", action="store_true", help="rate replies interactively in the terminal")
     a = ap.parse_args()
     cfg = load_config()
-    make_sheet(cfg) if a.make_sheet else run(cfg)
+    if a.make_sheet:
+        make_sheet(cfg)
+    elif a.rate:
+        rate(cfg)
+    else:
+        run(cfg)
