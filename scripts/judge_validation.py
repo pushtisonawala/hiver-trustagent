@@ -78,8 +78,12 @@ def rate(cfg):
         a = input("  acceptable? y/n > ").strip().lower()
         rows.append({"customer_text": r["customer_text"], "reply": r["reply"],
                      "human_overall": o, "human_acceptable": "1" if a.startswith("y") else "0"})
-    pd.DataFrame(rows).to_csv(out, index=False)
-    print(f"\nsaved {len(rows)} ratings -> {out}.  Now run:  make judge-validation")
+        pd.DataFrame(rows).to_csv(out, index=False)   # save after every rating
+    print(f"\nsaved {len(rows)} ratings -> {out}")
+    if len(rows) >= 15:
+        print("that's enough — now run:  make judge-validation")
+    else:
+        print(f"rate ~{25-len(rows)} more (re-run --rate) before make judge-validation")
 
 
 def run(cfg):
